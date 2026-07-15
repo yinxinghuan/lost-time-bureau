@@ -46,7 +46,7 @@ lost-time-bureau/
 - **调整答案与跨案影响**：编辑 `resolveProtocol()`、`resolveVerdict()` 和案件 `flag`。
 - **调整计时、得分和内部城市状态**：编辑 `hooks/useLostTimeBureau.ts`。
 - **移动线索热点**：修改 `LostTimeBureau.tsx` 的 `cluePositions`。
-- **改主界面、抽屉或双层揭晓**：编辑 `LostTimeBureau.tsx` 与 `LostTimeBureau.less`。
+- **改主界面、抽屉或三层揭晓**：编辑 `LostTimeBureau.tsx` 与 `LostTimeBureau.less`。
 - **改自然语言 UI**：编辑 `i18n/index.ts`；案件对白与后果仍在 `data/cases.ts`。
 - **改音效与震动**：编辑 `utils/sounds.ts`。
 - **接排行榜或云存档**：以 `totalScore` 和 `history` 为载荷，使用项目永久 UUID 作为 `session_id`；当前版本仅保存本地最佳分。
