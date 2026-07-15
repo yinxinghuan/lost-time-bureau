@@ -5,17 +5,6 @@ const path = require('path')
 const out = path.join(__dirname, 'ui')
 fs.mkdirSync(out, { recursive: true })
 
-async function hold(locator, page, ms = 720) {
-  const box = await locator.boundingBox()
-  if (!box) throw new Error('Verdict button has no bounding box')
-  const x = box.x + box.width / 2
-  const y = box.y + box.height / 2
-  await page.mouse.move(x, y)
-  await page.mouse.down()
-  await page.waitForTimeout(ms)
-  await page.mouse.up()
-}
-
 async function audit(page, label) {
   return page.evaluate((name) => {
     const targets = [...document.querySelectorAll('button')].map((el) => {
@@ -42,7 +31,7 @@ async function runViewport(browser, viewport, suffix) {
   await page.screenshot({ path: path.join(out, `01-start-${suffix}.png`), fullPage: true })
   const startAudit = await audit(page, `start-${suffix}`)
 
-  await page.getByRole('button', { name: /开始午夜值班|BEGIN MIDNIGHT SHIFT/ }).click()
+  await page.getByRole('button', { name: /开始值班|START THE SHIFT/ }).click()
   await page.waitForTimeout(450)
   await page.screenshot({ path: path.join(out, `02-case-${suffix}.png`), fullPage: true })
   const caseAudit = await audit(page, `case-${suffix}`)
@@ -51,51 +40,54 @@ async function runViewport(browser, viewport, suffix) {
   await page.waitForTimeout(120)
   await page.screenshot({ path: path.join(out, `02b-pause-${suffix}.png`), fullPage: true })
   const pauseAudit = await audit(page, `pause-${suffix}`)
-  await page.getByRole('button', { name: /继续核验|RESUME REVIEW/ }).click()
+  await page.getByRole('button', { name: /继续|CONTINUE/ }).click()
 
-  await page.getByRole('button', { name: /因果回声|Causal Echo/ }).click()
+  await page.getByRole('button', { name: /线索 3|CLUE 3/ }).click()
   await page.waitForTimeout(260)
   await page.screenshot({ path: path.join(out, `03-evidence-${suffix}.png`), fullPage: true })
   const evidenceAudit = await audit(page, `evidence-${suffix}`)
-  await page.getByRole('button', { name: /关闭档案|CLOSE FILE/ }).last().click()
+  await page.getByRole('button', { name: /看完了|DONE/ }).click()
 
-  await hold(page.getByRole('button', { name: /送回原线|RETURN TO LINE/ }), page)
-  await page.waitForTimeout(1450)
+  await page.getByRole('button', { name: /送回|SEND BACK/ }).click()
+  await page.waitForTimeout(350)
   await page.screenshot({ path: path.join(out, `04-reveal-${suffix}.png`), fullPage: true })
   const revealAudit = await audit(page, `reveal-${suffix}`)
-  await page.waitForTimeout(2500)
-  const stillReveal = await page.getByRole('button', { name: /归档此裁定|ARCHIVE RULING/ }).isVisible()
+  const stillReveal = await page.getByRole('button', { name: /看看为什么|SEE WHY/ }).isVisible()
 
-  await page.getByRole('button', { name: /归档此裁定|ARCHIVE RULING/ }).click()
+  await page.getByRole('button', { name: /看看为什么|SEE WHY/ }).click()
+  await page.waitForTimeout(220)
+  await page.screenshot({ path: path.join(out, `04a-report-${suffix}.png`), fullPage: true })
+  const reportVisible = await page.getByText(/后来发生了什么|WHAT HAPPENED NEXT/).isVisible()
+  await page.getByRole('button', { name: /下一位|NEXT VISITOR/ }).click()
   await page.waitForTimeout(220)
 
-  // Case 2: keep Ada's future map so case 4 must surface a visible prior-case echo.
-  await hold(page.getByRole('button', { name: /留在现世|KEEP IN PRESENT/ }), page)
-  await page.waitForTimeout(1500)
-  await page.getByRole('button', { name: /归档此裁定|ARCHIVE RULING/ }).click()
+  // Case 2: keep Ada's future map so case 4 resolves against the earlier choice.
+  await page.getByRole('button', { name: /留下|LET STAY/ }).click()
+  await page.getByRole('button', { name: /看看为什么|SEE WHY/ }).click()
+  await page.getByRole('button', { name: /下一位|NEXT VISITOR/ }).click()
   await page.waitForTimeout(180)
 
   // Case 3.
-  await hold(page.getByRole('button', { name: /送回原线|RETURN TO LINE/ }), page)
-  await page.waitForTimeout(1500)
+  await page.getByRole('button', { name: /送回|SEND BACK/ }).click()
+  await page.waitForTimeout(300)
   await page.screenshot({ path: path.join(out, `04c-failure-reveal-${suffix}.png`), fullPage: true })
-  const failureVisible = await page.getByText(/判定失误|RULING FAILED/).isVisible()
-  await page.getByRole('button', { name: /归档此裁定|ARCHIVE RULING/ }).click()
+  const failureVisible = await page.getByText(/判错了|NOT QUITE/).isVisible()
+  await page.getByRole('button', { name: /看看为什么|SEE WHY/ }).click()
+  await page.getByRole('button', { name: /下一位|NEXT VISITOR/ }).click()
   await page.waitForTimeout(250)
 
-  const echoVisible = await page.locator('.ltb-echo-note').isVisible()
   await page.screenshot({ path: path.join(out, `04b-echo-case-${suffix}.png`), fullPage: true })
   const echoAudit = await audit(page, `echo-case-${suffix}`)
 
   // Cases 4–7: keep alternating to preserve both resources.
   for (const choice of ['stay', 'return', 'stay', 'return']) {
     const locator = choice === 'stay'
-      ? page.getByRole('button', { name: /留在现世|KEEP IN PRESENT/ })
-      : page.getByRole('button', { name: /送回原线|RETURN TO LINE/ })
-    await hold(locator, page)
-    await page.waitForTimeout(1500)
-    if (choice === 'return' && await page.locator('.ltb-result').isVisible()) break
-    await page.getByRole('button', { name: /归档此裁定|ARCHIVE RULING/ }).click()
+      ? page.getByRole('button', { name: /留下|LET STAY/ })
+      : page.getByRole('button', { name: /送回|SEND BACK/ })
+    await locator.click()
+    await page.getByRole('button', { name: /看看为什么|SEE WHY/ }).click()
+    const next = page.getByRole('button', { name: /下一位|查看结果|NEXT VISITOR|SEE RESULTS/ })
+    await next.click()
     await page.waitForTimeout(200)
   }
 
@@ -103,7 +95,7 @@ async function runViewport(browser, viewport, suffix) {
   const resultAudit = await audit(page, `result-${suffix}`)
 
   await page.close()
-  return { suffix, errors, stillReveal, echoVisible, failureVisible, audits: [startAudit, caseAudit, pauseAudit, evidenceAudit, revealAudit, echoAudit, resultAudit] }
+  return { suffix, errors, stillReveal, reportVisible, failureVisible, audits: [startAudit, caseAudit, pauseAudit, evidenceAudit, revealAudit, echoAudit, resultAudit] }
 }
 
 ;(async () => {

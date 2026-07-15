@@ -7,65 +7,42 @@ import type { EvidenceId, LocalizedText } from './types'
 import { sounds } from './utils/sounds'
 import './LostTimeBureau.less'
 
-const iconByEvidence: Record<EvidenceId, 'object' | 'memory' | 'echo'> = {
-  object: 'object',
-  memory: 'memory',
-  echo: 'echo',
+const cluePositions: Record<EvidenceId, { left: string; top: string }> = {
+  object: { left: '22%', top: '66%' },
+  memory: { left: '73%', top: '34%' },
+  echo: { left: '72%', top: '72%' },
 }
 
-function ResourceMeter({ label, value, tone }: { label: string; value: number; tone: 'stable' | 'human' }) {
-  return (
-    <div className={`ltb-meter ltb-meter--${tone}${value < 20 ? ' is-critical' : ''}`}>
-      <div className="ltb-meter__head"><span>{label}</span><strong>{value}</strong></div>
-      <div className="ltb-meter__track"><span style={{ width: `${value}%` }} /></div>
-    </div>
-  )
-}
+const clueTitles = {
+  zh: { object: '随身物品', memory: '他说的过去', echo: '会发生什么' },
+  en: { object: 'WHAT THEY CARRY', memory: 'THEIR PAST', echo: 'WHAT MAY HAPPEN' },
+} as const
 
-function CityScene() {
-  return (
-    <div className="ltb-city" aria-hidden="true">
-      <div className="ltb-city__moon" />
-      <div className="ltb-city__clock"><span /><i /></div>
-      <div className="ltb-city__skyline ltb-city__skyline--back" />
-      <div className="ltb-city__skyline ltb-city__skyline--front" />
-      <div className="ltb-city__office">
-        <span className="ltb-city__window ltb-city__window--1" />
-        <span className="ltb-city__window ltb-city__window--2" />
-        <span className="ltb-city__window ltb-city__window--lit" />
-        <span className="ltb-city__window ltb-city__window--4" />
-      </div>
-      <div className="ltb-city__tramline" />
-    </div>
-  )
-}
+function PortraitImage({ file, name }: { file: string; name: string }) {
+  const [ready, setReady] = useState(false)
+  const [failed, setFailed] = useState(false)
+  const src = `${import.meta.env.BASE_URL}portraits/${file}`
 
-function VisitorPortrait({ file, name, split = false }: { file: string; name: string; split?: boolean }) {
+  useEffect(() => {
+    setReady(false)
+    setFailed(false)
+    const timer = window.setTimeout(() => setReady(true), 1200)
+    return () => window.clearTimeout(timer)
+  }, [src])
+
   return (
-    <div className={`ltb-portrait${split ? ' is-split' : ''}`} aria-label={name}>
-      <div className="ltb-portrait__halo" />
-      <div className="ltb-portrait__head">
-        <span className="ltb-portrait__hair" />
-        <span className="ltb-portrait__ear ltb-portrait__ear--left" />
-        <span className="ltb-portrait__ear ltb-portrait__ear--right" />
-        <span className="ltb-portrait__brow ltb-portrait__brow--left" />
-        <span className="ltb-portrait__brow ltb-portrait__brow--right" />
-        <span className="ltb-portrait__eye ltb-portrait__eye--left" />
-        <span className="ltb-portrait__eye ltb-portrait__eye--right" />
-        <span className="ltb-portrait__nose" />
-        <span className="ltb-portrait__mouth" />
-      </div>
-      <div className="ltb-portrait__neck" />
-      <div className="ltb-portrait__coat"><span className="ltb-portrait__collar" /><i /></div>
-      <div className="ltb-portrait__badge">37</div>
-      {split && <div className="ltb-portrait__split-line" />}
-      <img
-        className="ltb-portrait__image"
-        src={`${import.meta.env.BASE_URL}portraits/${file}`}
-        alt={name}
-        draggable={false}
-        onError={(event) => { event.currentTarget.style.display = 'none' }}
-      />
+    <div className={`ltb-person${ready ? ' is-ready' : ''}${failed ? ' is-fallback' : ''}`}>
+      <div className="ltb-person__fallback" aria-hidden="true"><span>{name.slice(0, 1)}</span></div>
+      {!failed && (
+        <img
+          src={src}
+          alt={name}
+          draggable={false}
+          onLoad={() => setReady(true)}
+          onError={() => { setFailed(true); setReady(true) }}
+        />
+      )}
+      {!ready && <div className="ltb-person__curtain"><span /></div>}
     </div>
   )
 }
@@ -73,7 +50,7 @@ function VisitorPortrait({ file, name, split = false }: { file: string; name: st
 export default function LostTimeBureau() {
   const [locale, setLocale] = useState<Locale>(() => detectLocale())
   const [muted, setMuted] = useState(() => sounds.isMuted())
-  const [canArchive, setCanArchive] = useState(false)
+  const [showReport, setShowReport] = useState(false)
   const playedOutcomeRef = useRef('')
   const t = useMemo(() => makeTranslator(locale), [locale])
   const game = useLostTimeBureau()
@@ -87,15 +64,7 @@ export default function LostTimeBureau() {
   }, [game.caseIndex])
 
   useEffect(() => {
-    if (game.phase !== 'reveal') {
-      setCanArchive(false)
-      return
-    }
-    const timer = window.setTimeout(() => setCanArchive(true), 1400)
-    return () => window.clearTimeout(timer)
-  }, [game.phase, game.caseIndex])
-
-  useEffect(() => {
+    setShowReport(false)
     if (game.phase !== 'reveal') return
     const key = `${game.caseIndex}-${game.verdict}`
     if (playedOutcomeRef.current === key) return
@@ -107,7 +76,8 @@ export default function LostTimeBureau() {
   const openEvidence = (id: EvidenceId) => { sounds.instrument(); game.openEvidence(id) }
   const closeEvidence = () => { sounds.drawerClose(); game.closeEvidence() }
   const submitVerdict = (choice: 'stay' | 'return') => { sounds.verdict(choice); game.submitVerdict(choice) }
-  const archive = () => { sounds.archive(); game.archive() }
+  const nextVisitor = () => { sounds.archive(); game.archive() }
+
   const toggleMuted = () => {
     const next = !muted
     sounds.setMuted(next)
@@ -120,181 +90,135 @@ export default function LostTimeBureau() {
     setLocale(next)
   }
 
-  return (
-    <section className={`ltb ltb--${game.phase}`} lang={locale === 'zh' ? 'zh-CN' : 'en'}>
-      <div className="ltb__grain" aria-hidden="true" />
+  const reason = game.protocolDecision
+    ? local(game.protocolDecision.reason).replace(/^关键证据：/, '').replace(/^Key evidence:\s*/i, '')
+    : ''
+  const selectedIndex = game.selected ? game.currentCase.evidence.findIndex((item) => item.id === game.selected!.id) : -1
+  const ending = game.stability <= 0
+    ? t('ending.history')
+    : game.humanity <= 0
+      ? t('ending.people')
+      : Math.abs(game.stability - game.humanity) <= 18
+        ? t('ending.balance')
+        : game.stability > game.humanity ? t('ending.order') : t('ending.mercy')
 
+  return (
+    <main className={`ltb ltb--${game.phase}${locale === 'en' ? ' ltb--en' : ''}`} lang={locale === 'zh' ? 'zh-CN' : 'en'}>
       {game.phase === 'start' && (
-        <div className="ltb-start">
-          <CityScene />
-          <header className="ltb-start__header">
-            <span className="ltb-start__bureau">{t('bureau')}</span>
-            <button className="ltb-lang" type="button" onClick={switchLocale} aria-label="Switch language">
-              {locale === 'zh' ? 'EN' : '中'}
-            </button>
-          </header>
-          <div className="ltb-start__titleplate">
-            <span className="ltb-start__index">TEMPORAL RECORDS / 07</span>
+        <section className="ltb-start">
+          <div className="ltb-start__hero">
+            <img src={`${import.meta.env.BASE_URL}poster.png`} alt={t('start.posterAlt')} draggable={false} />
+            <div className="ltb-start__shade" />
+            <button className="ltb-lang" type="button" onClick={switchLocale} aria-label={t('language')}>{locale === 'zh' ? 'EN' : '中'}</button>
+          </div>
+          <div className="ltb-start__panel">
+            <span>{t('start.eyebrow')}</span>
             <h1>{t('title')}</h1>
-            <p>{t('subtitle')}</p>
+            <p>{t('start.simpleCopy')}</p>
+            <button className="ltb-primary" type="button" onPointerDown={beginShift}>{t('start.simpleButton')}</button>
+            {game.bestScore > 0 && <small>{t('best')} {game.bestScore}</small>}
           </div>
-          <div className="ltb-start__console">
-            <div className="ltb-start__status"><i /><span>{t('date')}</span></div>
-            <div className="ltb-start__steps" aria-label={locale === 'zh' ? '玩法说明' : 'How to play'}>
-              <span><b>1</b>{locale === 'zh' ? '看证据' : 'READ'}</span>
-              <i />
-              <span><b>2</b>{locale === 'zh' ? '选去留' : 'RULE'}</span>
-              <i />
-              <span><b>3</b>{locale === 'zh' ? '看成败' : 'RESULT'}</span>
-            </div>
-            <p>{game.bestScore > 0 ? (locale === 'zh' ? `历史最佳总评 ${game.bestScore} · 今夜有 7 份未归档身份` : `BEST TOTAL ${game.bestScore} · 7 identities await review`) : t('startHint')}</p>
-            <button className="ltb-primary" type="button" onPointerDown={beginShift}>
-              <LineIcon name="archive" />
-              <span>{t('start')}</span>
-            </button>
-          </div>
-        </div>
+        </section>
       )}
 
       {game.phase === 'case' && (
-        <div className="ltb-case">
+        <section className="ltb-play">
           <header className="ltb-hud">
-            <div className="ltb-hud__bureau"><LineIcon name="archive" /><span>{locale === 'zh' ? `档案 ${String(game.caseIndex + 1).padStart(2, '0')} / ${String(game.totalCases).padStart(2, '0')}` : `FILE ${String(game.caseIndex + 1).padStart(2, '0')} / ${String(game.totalCases).padStart(2, '0')}`}</span></div>
-            <div className="ltb-hud__right">
-              <button className="ltb-icon-button" type="button" onClick={game.pause} aria-label={locale === 'zh' ? '暂停' : 'Pause'}><LineIcon name="pause" /></button>
-              <div className={`ltb-timer${game.seconds <= 5 ? ' is-low' : ''}`}>
-                <LineIcon name="clock" /><span>{t('timer')}</span><strong>{game.seconds}</strong>
-              </div>
-            </div>
+            <strong>{String(game.caseIndex + 1).padStart(2, '0')} <span>/ {String(game.totalCases).padStart(2, '0')}</span></strong>
+            <div className={`ltb-time${game.seconds <= 5 ? ' is-low' : ''}`}><LineIcon name="clock" /><b>{game.seconds}</b></div>
+            <button className="ltb-icon-button" type="button" onClick={game.pause} aria-label={t('pause')}><LineIcon name="pause" /></button>
           </header>
-          <div className="ltb-resources">
-            <ResourceMeter label={t('stability')} value={game.stability} tone="stable" />
-            <ResourceMeter label={t('humanity')} value={game.humanity} tone="human" />
+
+          <div className="ltb-stage">
+            <PortraitImage key={game.currentCase.id} file={game.currentCase.portrait} name={local(game.currentCase.name)} />
+            <div className="ltb-stage__name"><strong>{local(game.currentCase.name)}</strong></div>
+            {game.currentCase.evidence.map((item, index) => (
+              <button
+                className={`ltb-clue${game.inspected.has(item.id) ? ' is-seen' : ''}`}
+                type="button"
+                key={item.id}
+                style={cluePositions[item.id]}
+                onClick={() => openEvidence(item.id)}
+                aria-label={`${t('clue')} ${index + 1}`}
+              >
+                <LineIcon name={game.inspected.has(item.id) ? 'check' : 'search'} />
+                <span>{index + 1}</span>
+              </button>
+            ))}
           </div>
 
-          {game.currentCase.echoFlag && game.flags.has(game.currentCase.echoFlag) && game.currentCase.echoText && (
-            <div className="ltb-echo-note">{local(game.currentCase.echoText)}</div>
-          )}
+          <blockquote className="ltb-dialogue">{local(game.currentCase.quote)}</blockquote>
 
-          <div className="ltb-window">
-            <div className="ltb-window__glass" />
-            <VisitorPortrait file={game.currentCase.portrait} name={local(game.currentCase.name)} />
-            <div className="ltb-window__id">
-              <strong>{local(game.currentCase.name)}</strong>
-              <span>{local(game.currentCase.meta)}</span>
+          <div className="ltb-actions">
+            <p>{t('clueProgress').replace('{n}', String(game.inspected.size))}</p>
+            <div>
+              <button className="ltb-choice ltb-choice--stay" type="button" onPointerDown={() => submitVerdict('stay')}>{t('staySimple')}</button>
+              <button className="ltb-choice ltb-choice--return" type="button" onPointerDown={() => submitVerdict('return')}>{t('returnSimple')}</button>
             </div>
           </div>
-
-          <blockquote className="ltb-quote">{local(game.currentCase.quote)}</blockquote>
-
-          <div className="ltb-instruments">
-            {game.currentCase.evidence.map((item) => {
-              const read = game.inspected.has(item.id)
-              return (
-                <button
-                  className={`ltb-instrument${read ? ' is-read' : ''}`}
-                  type="button"
-                  key={item.id}
-                  onClick={() => openEvidence(item.id)}
-                >
-                  <span className="ltb-instrument__dial"><LineIcon name={iconByEvidence[item.id]} /><i /></span>
-                  <strong>{local(item.label)}</strong>
-                  <small>{read ? t('inspected') : t('inspect')}</small>
-                </button>
-              )
-            })}
-          </div>
-
-          <div className="ltb-rulings">
-            <div className="ltb-rulings__head">
-              <strong>{locale === 'zh' ? '作出判定' : 'MAKE YOUR RULING'}</strong>
-              <span>{locale === 'zh' ? '点击后立即揭晓' : 'Tap to reveal immediately'}</span>
-            </div>
-            <button className="ltb-ruling ltb-ruling--stay" type="button" onPointerDown={() => submitVerdict('stay')}>
-              <span>{t('stay')}</span>
-              <small>{locale === 'zh' ? '接纳为现世居民' : 'Grant present residency'}</small>
-            </button>
-            <button className="ltb-ruling ltb-ruling--return" type="button" onPointerDown={() => submitVerdict('return')}>
-              <span>{t('return')}</span>
-              <small>{locale === 'zh' ? '恢复原有时间记录' : 'Restore original record'}</small>
-            </button>
-          </div>
-        </div>
+        </section>
       )}
 
       {game.phase === 'case' && game.selected && (
-        <div className="ltb-drawer-wrap" role="presentation" onClick={closeEvidence}>
-          <article className="ltb-drawer" role="dialog" aria-modal="true" aria-labelledby="evidence-title" onClick={(event) => event.stopPropagation()}>
-            <div className="ltb-drawer__handle" />
-            <header>
-              <div><span>{t('evidenceTitle')}</span><strong id="evidence-title">{local(game.selected.label)}</strong></div>
+        <div className="ltb-sheet-wrap" role="presentation" onClick={closeEvidence}>
+          <article className="ltb-sheet" role="dialog" aria-modal="true" aria-labelledby="clue-title" onClick={(event) => event.stopPropagation()}>
+            <div className="ltb-sheet__top">
+              <span>{t('clue')} {selectedIndex + 1} / 3</span>
               <button type="button" onClick={closeEvidence} aria-label={t('close')}><LineIcon name="close" /></button>
-            </header>
-            <div className="ltb-drawer__reading">
-              <span>ATOMIC CLOCK VERIFIED</span>
-              <strong>{local(game.selected.value)}</strong>
             </div>
+            <h2 id="clue-title">{clueTitles[locale][game.selected.id]}</h2>
+            <strong className="ltb-sheet__value">{local(game.selected.value)}</strong>
             <p>{local(game.selected.detail)}</p>
-            <small>{t('evidenceSource')}</small>
-            <button className="ltb-drawer__close" type="button" onClick={closeEvidence}>{t('close')}</button>
+            <small><LineIcon name="pause" /> {t('timePaused')}</small>
+            <button className="ltb-sheet__done" type="button" onClick={closeEvidence}>{t('clueDone')}</button>
           </article>
         </div>
       )}
 
       {game.phase === 'reveal' && game.verdict && game.result && (
-        <div className={`ltb-reveal ltb-reveal--${game.verdict}`}>
-          <div className={`ltb-evaluation ${game.lastSuccess ? 'is-success' : 'is-failure'}`}>
-            <span className="ltb-evaluation__icon"><LineIcon name={game.lastSuccess ? 'check' : 'cross'} /></span>
-            <div>
-              <strong>{game.lastSuccess ? (locale === 'zh' ? '判定成功' : 'RULING SUCCESS') : (locale === 'zh' ? '判定失误' : 'RULING FAILED')}</strong>
-              <small>{game.lastSuccess ? (locale === 'zh' ? '你的选择符合关键证据' : 'Your choice matches the key evidence') : (locale === 'zh' ? '你的选择与关键证据冲突' : 'Your choice conflicts with the key evidence')}</small>
+        <section className={`ltb-reveal ${game.lastSuccess ? 'is-right' : 'is-wrong'}${showReport ? ' is-report' : ''}`}>
+          <div className="ltb-reveal__scene">
+            <PortraitImage file={game.currentCase.portrait} name={local(game.currentCase.name)} />
+            <div className="ltb-reveal__choice">{t('youChose')} {game.verdict === 'stay' ? t('staySimple') : t('returnSimple')}</div>
+            <div className="ltb-stamp"><LineIcon name={game.lastSuccess ? 'check' : 'cross'} /><strong>{game.lastSuccess ? t('right') : t('wrong')}</strong></div>
+          </div>
+
+          {!showReport ? (
+            <div className="ltb-reveal__bar">
+              <p>{game.lastSuccess ? t('rightHint') : t('wrongHint')}</p>
+              <button type="button" onClick={() => setShowReport(true)}>{t('why')}</button>
             </div>
-          </div>
-          {game.protocolDecision && <p className="ltb-reveal__reason">{local(game.protocolDecision.reason)}</p>}
-          <header className="ltb-reveal__header"><span>{t('consequence')}</span><strong>{local(game.result.title)}</strong></header>
-          <div className="ltb-timeline">
-            <div className="ltb-timeline__era ltb-timeline__era--past"><span>PAST LINE</span><strong>{local(game.result.timelinePast)}</strong></div>
-            <VisitorPortrait file={game.currentCase.portrait} name={local(game.currentCase.name)} split />
-            <div className="ltb-timeline__era ltb-timeline__era--future"><span>PRESENT LINE</span><strong>{local(game.result.timelineFuture)}</strong></div>
-            <div className="ltb-timeline__rail"><i /><i /><i /></div>
-          </div>
-          <p className="ltb-reveal__summary">{local(game.result.summary)}</p>
-          <div className="ltb-reveal__deltas">
-            <span className={game.result.stabilityDelta > 0 ? 'is-positive' : 'is-negative'}>{t('stability')} {game.result.stabilityDelta > 0 ? '+' : ''}{game.result.stabilityDelta}</span>
-            <span className={game.result.humanityDelta > 0 ? 'is-positive' : 'is-negative'}>{t('humanity')} {game.result.humanityDelta > 0 ? '+' : ''}{game.result.humanityDelta}</span>
-          </div>
-          <button className="ltb-primary ltb-reveal__archive" type="button" disabled={!canArchive} onClick={archive}><LineIcon name="archive" /><span>{canArchive ? t('archive') : (locale === 'zh' ? '时间线稳定中…' : 'TIMELINE SETTLING…')}</span></button>
-        </div>
+          ) : (
+            <article className="ltb-report">
+              <div><span>{t('whyTitle')}</span><p>{reason}</p></div>
+              <div><span>{t('laterTitle')}</span><p>{local(game.result.summary)}</p></div>
+              <button type="button" onClick={nextVisitor}>{game.caseIndex + 1 >= game.totalCases ? t('seeResult') : t('next')}</button>
+            </article>
+          )}
+        </section>
       )}
 
-      {game.phase === 'result' && game.verdict && (
-        <div className="ltb-result">
-          <div className="ltb-result__seal"><span>PSB</span><i /></div>
-          <span className="ltb-result__eyebrow">MIDNIGHT ARCHIVE / PROTOTYPE 01</span>
-          <h2>{t('resultTitle')}</h2>
-          <p>{t('resultSubtitle')}</p>
-          <div className="ltb-result__version">{game.stability <= 0 ? (locale === 'zh' ? '结局：历史解体' : 'ENDING: HISTORY COLLAPSE') : game.humanity <= 0 ? (locale === 'zh' ? '结局：机构接管' : 'ENDING: BUREAU TAKEOVER') : game.stability - game.humanity > 24 ? (locale === 'zh' ? '城市版本：封闭线' : 'CITY VERSION: CLOSED LINE') : game.humanity - game.stability > 24 ? (locale === 'zh' ? '城市版本：漂移线' : 'CITY VERSION: DRIFT LINE') : (locale === 'zh' ? '城市版本：共存线' : 'CITY VERSION: COEXISTENCE LINE')}</div>
-          <div className="ltb-result__meters">
-            <ResourceMeter label={t('stability')} value={game.stability} tone="stable" />
-            <ResourceMeter label={t('humanity')} value={game.humanity} tone="human" />
-          </div>
-          <div className="ltb-result__accuracy"><strong>{game.correctCount} / {game.totalCases}</strong><span>{locale === 'zh' ? '判定成功' : 'SUCCESSFUL RULINGS'}</span></div>
-          <small>{locale === 'zh' ? `已处理 ${game.history.length} 份档案 · 总评 ${game.totalScore}` : `${game.history.length} files processed · Total ${game.totalScore}`}</small>
-          <button className="ltb-primary" type="button" onPointerDown={beginShift}><LineIcon name="archive" /><span>{t('retry')}</span></button>
-        </div>
+      {game.phase === 'result' && (
+        <section className="ltb-result">
+          <span>{t('daybreak')}</span>
+          <h2>{game.correctCount}<small> / {game.totalCases}</small></h2>
+          <strong>{t('rightCount')}</strong>
+          <p>{ending}</p>
+          <div className="ltb-result__scores"><span>{t('score')} <b>{game.totalScore}</b></span><span>{t('best')} <b>{Math.max(game.bestScore, game.totalScore)}</b></span></div>
+          <button className="ltb-primary" type="button" onPointerDown={beginShift}>{t('again')}</button>
+        </section>
       )}
 
       {game.phase === 'case' && game.paused && (
-        <div className="ltb-pause" role="dialog" aria-modal="true" aria-label={locale === 'zh' ? '暂停菜单' : 'Pause menu'}>
+        <div className="ltb-pause" role="dialog" aria-modal="true" aria-label={t('pause')}>
           <div className="ltb-pause__panel">
-            <span>MIDNIGHT ARCHIVE</span>
-            <h2>{locale === 'zh' ? '值班暂停' : 'SHIFT PAUSED'}</h2>
-            <button className="ltb-primary" type="button" onClick={game.resume}>{locale === 'zh' ? '继续核验' : 'RESUME REVIEW'}</button>
-            <button className="ltb-pause__secondary" type="button" onClick={toggleMuted}><LineIcon name="sound" />{muted ? (locale === 'zh' ? '开启声音' : 'SOUND ON') : (locale === 'zh' ? '关闭声音' : 'MUTE')}</button>
-            <button className="ltb-pause__secondary" type="button" onClick={beginShift}>{locale === 'zh' ? '重新值班' : 'RESTART SHIFT'}</button>
+            <h2>{t('paused')}</h2>
+            <button className="ltb-primary" type="button" onClick={game.resume}>{t('continue')}</button>
+            <button type="button" onClick={toggleMuted}><LineIcon name="sound" />{muted ? t('soundOn') : t('soundOff')}</button>
+            <button type="button" onClick={beginShift}>{t('restart')}</button>
           </div>
         </div>
       )}
-    </section>
+    </main>
   )
 }
