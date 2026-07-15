@@ -47,9 +47,14 @@ function PortraitImage({ file, name }: { file: string; name: string }) {
   )
 }
 
-function ClueVisual({ id, value, locale }: { id: EvidenceId; value: string; locale: Locale }) {
+function ClueVisual({ caseId, id, value, locale }: { caseId: string; id: EvidenceId; value: string; locale: Locale }) {
+  const [imageReady, setImageReady] = useState(false)
+  const [imageFailed, setImageFailed] = useState(false)
+  const src = `${import.meta.env.BASE_URL}manual/${caseId}-${id}.jpg`
+
   return (
-    <div className={`ltb-clue-visual ltb-clue-visual--${id}`}>
+    <div className={`ltb-clue-visual ltb-clue-visual--${id}${imageReady ? ' has-plate' : ''}`}>
+      {!imageFailed && <img className="ltb-clue-visual__plate" src={src} alt="" draggable={false} onLoad={() => setImageReady(true)} onError={() => setImageFailed(true)} />}
       <div className="ltb-clue-visual__graphic" aria-hidden="true">
         <LineIcon name={id} />
         {id === 'object' && <div className="ltb-clue-visual__rings"><i /><i /><i /></div>}
@@ -59,6 +64,12 @@ function ClueVisual({ id, value, locale }: { id: EvidenceId; value: string; loca
       <strong>{value}</strong>
     </div>
   )
+}
+
+function OutcomePlate({ caseId }: { caseId: string }) {
+  const [failed, setFailed] = useState(false)
+  if (failed) return null
+  return <img className="ltb-outcome-plate" src={`${import.meta.env.BASE_URL}manual/${caseId}-echo.jpg`} alt="" draggable={false} onError={() => setFailed(true)} />
 }
 
 export default function LostTimeBureau() {
@@ -76,6 +87,10 @@ export default function LostTimeBureau() {
     ;[caseFiles[game.caseIndex], caseFiles[game.caseIndex + 1]].filter(Boolean).forEach((file) => {
       const image = new Image()
       image.src = `${import.meta.env.BASE_URL}portraits/${file.portrait}`
+    })
+    caseFiles[game.caseIndex]?.evidence.forEach((item) => {
+      const image = new Image()
+      image.src = `${import.meta.env.BASE_URL}manual/${caseFiles[game.caseIndex].id}-${item.id}.jpg`
     })
   }, [game.caseIndex])
 
@@ -192,7 +207,7 @@ export default function LostTimeBureau() {
               <button type="button" onClick={closeEvidence} aria-label={t('close')}><LineIcon name="close" /></button>
             </div>
             <h2 id="clue-title">{clueTitles[locale][game.selected.id]}</h2>
-            <ClueVisual id={game.selected.id} value={local(game.selected.value)} locale={locale} />
+            <ClueVisual key={`${game.currentCase.id}-${game.selected.id}`} caseId={game.currentCase.id} id={game.selected.id} value={local(game.selected.value)} locale={locale} />
             {clueExpanded && <p className="ltb-sheet__detail">{local(game.selected.detail)}</p>}
             <small><LineIcon name="pause" /> {t('timePaused')}</small>
             {!clueExpanded ? (
@@ -234,6 +249,7 @@ export default function LostTimeBureau() {
           ) : (
             <article className="ltb-report ltb-report--timeline">
               <header><span>{t('laterTitle')}</span><strong>{local(game.result.title).replace(/^裁定：|^最终裁定：|^RULING:\s*|^FINAL RULING:\s*/i, '')}</strong></header>
+              <OutcomePlate caseId={game.currentCase.id} />
               <div className="ltb-mini-timeline">
                 <div><i /><span>{t('before')}</span><strong>{local(game.result.timelinePast)}</strong></div>
                 <b><i /><i /><i /></b>

@@ -101,10 +101,15 @@ button { font: inherit; -webkit-tap-highlight-color: transparent; user-select: n
 .ltb-sheet__top button { width: 44px; height: 44px; display: grid; place-items: center; border: 1px solid fade(@ink, 25%); background: transparent; color: @ink; }
 .ltb-sheet__top svg { width: 22px; height: 22px; }
 .ltb-sheet h2 { margin: 4px 0 12px; font: 700 28px/1.15 "Noto Serif SC", "Songti SC", serif; }
-.ltb-clue-visual { min-height: 158px; display: grid; grid-template-rows: 1fr auto; place-items: center; padding: 12px; overflow: hidden; border: 1px solid fade(@gold, 46%); background: #e8d9bc; }
+.ltb-clue-visual { position: relative; min-height: 158px; display: grid; grid-template-rows: 1fr auto; place-items: center; padding: 12px; overflow: hidden; border: 1px solid fade(@gold, 46%); background: #e8d9bc; }
+.ltb-clue-visual__plate { position: absolute; z-index: 1; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 180ms ease-out; pointer-events: none; }
+.ltb-clue-visual.has-plate .ltb-clue-visual__plate { opacity: 1; }
+.ltb-clue-visual.has-plate::after { content: ''; position: absolute; z-index: 2; inset: 46% 0 0; background: linear-gradient(transparent, fade(#eee1c6, 94%) 66%); pointer-events: none; }
+.ltb-clue-visual.has-plate .ltb-clue-visual__graphic { opacity: 0; }
 .ltb-clue-visual__graphic { position: relative; width: 118px; height: 92px; display: grid; place-items: center; color: #7a5120; }
 .ltb-clue-visual__graphic > svg { position: relative; z-index: 3; width: 46px; height: 46px; stroke-width: 1.35; }
 .ltb-clue-visual > strong { position: relative; z-index: 4; max-width: 100%; color: #68451b; font: 800 19px/1.25 monospace; text-align: center; overflow-wrap: anywhere; }
+.ltb-clue-visual.has-plate > strong { align-self: end; padding: 5px 9px; background: fade(#f1e5cc, 88%); box-shadow: 0 0 0 1px fade(#68451b, 25%); }
 .ltb-clue-visual__rings { position: absolute; inset: 0; display: grid; place-items: center; }
 .ltb-clue-visual__rings i { position: absolute; width: 74px; height: 74px; border: 1px solid fade(#7a5120, 55%); border-radius: 50%; }
 .ltb-clue-visual__rings i:nth-child(2) { width: 96px; height: 96px; border-style: dashed; }
@@ -148,6 +153,7 @@ button { font: inherit; -webkit-tap-highlight-color: transparent; user-select: n
 .ltb-compare > i.is-match { color: #257c73; }
 .ltb-compare > i svg { width: 32px; height: 32px; stroke-width: 2.3; }
 .ltb-report__reason, .ltb-report__summary { margin: 12px 0 0; padding: 9px 11px; border-left: 3px solid @gold; background: fade(@gold, 9%); font: 500 16px/1.5 "Noto Serif SC", "Songti SC", serif; }
+.ltb-outcome-plate { display: block; width: 100%; height: 142px; margin-top: 12px; object-fit: cover; border: 1px solid fade(@gold, 42%); background: #e8d9bc; pointer-events: none; }
 .ltb-mini-timeline { margin-top: 15px; display: grid; grid-template-columns: minmax(0, 1fr) 42px minmax(0, 1fr); align-items: center; }
 .ltb-mini-timeline > div { min-width: 0; text-align: center; }
 .ltb-mini-timeline > div > i { display: block; width: 18px; height: 18px; margin: 0 auto 7px; border: 3px solid @gold; border-radius: 50%; background: @paper; }
@@ -224,6 +230,7 @@ button { font: inherit; -webkit-tap-highlight-color: transparent; user-select: n
   .ltb-clue-visual__graphic { height: 68px; }
   .ltb-report { max-height: 72%; padding: 13px; }
   .ltb-report__reason, .ltb-report__summary { font-size: 14px; line-height: 1.4; }
+  .ltb-outcome-plate { height: 108px; margin-top: 9px; }
   .ltb-compare > div { min-height: 66px; }
   .ltb-mini-timeline { margin-top: 10px; }
   .ltb-mini-timeline > div strong { font-size: 12px; line-height: 1.3; }
