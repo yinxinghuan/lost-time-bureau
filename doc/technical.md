@@ -22,7 +22,7 @@ lost-time-bureau/
     types.ts                   # 案件、证据、裁定类型
     data/cases.ts              # 7 案双语内容、资源变化与历史旗标
     hooks/useLostTimeBureau.ts # 状态机、计时、资源、分数、最佳分
-    components/                # 长按按钮和统一 SVG 图标
+    components/                # 统一 SVG 图标
     i18n/index.ts              # zh / en 固定界面文案
     utils/sounds.ts            # Web Audio 合成
   _assets/                     # transit 制作脚本与来源记录
@@ -35,7 +35,7 @@ lost-time-bureau/
 
 - `useLostTimeBureau()` 管理 `start → case → reveal → result`，暂停是独立布尔状态。
 - 每案从 24 秒开始。证据抽屉、暂停和页面进入后台都会冻结计时，恢复时补偿暂停时长。
-- 裁定由 `resolveVerdict()` 计算；结果写入 `history`，旗标写入 `flags`。第四案读取第二案的 `future_map`，实际减少稳定代价并替换揭晓文案。
+- 裁定由 `resolveVerdict()` 计算资源与历史后果，`resolveProtocol()` 计算协议成败和关键理由；结果写入 `history`，旗标写入 `flags`。第四案读取第二案的 `future_map`，动态改变协议答案、稳定代价与揭晓文案。
 - `reveal` 至少锁定 1.4 秒，之后才开放归档；不会自动跳过。
 
 ### 适配、资源与计分
@@ -43,8 +43,8 @@ lost-time-bureau/
 - `.ltb` 使用 `min(100vw, 430px)` 和 `100dvh`；短屏媒体查询覆盖 320×568。
 - 所有操作目标至少 44×44 CSS px，顶部与底部避让系统安全区。
 - 因果稳定、人道信用均为 0–100；任一归零后在揭晓结束时进入失败结算。
-- 第三个未读证据消耗校准点；进入第四案和第六案前各恢复 1 点，上限 3。
-- 单案基础 100，证据完整 +25，剩余 8 秒以上 +20，完成裁定 +35；总评再加 `min(双资源) × 10`。
+- 三项证据均可直接打开，不设校准点或阅读门槛。
+- 单案基础 100，证据完整 +25，剩余 8 秒以上 +20，协议判定成功 +35；总评再加 `min(双资源) × 10`。
 - 最佳总评使用专属键 `lost-time-bureau-best`。
 
 ### 素材、音频与多语言
@@ -57,7 +57,7 @@ lost-time-bureau/
 
 - **改案件 / 加案件**：编辑 `src/LostTimeBureau/data/cases.ts`，肖像放入 `public/portraits/`。
 - **加跨案因果**：在裁定结果写入 `flag`，并在 `resolveVerdict()` 读取 `flags`。
-- **调数值**：计时、资源和计分在 `hooks/useLostTimeBureau.ts`；长按阈值在 `components/HoldVerdictButton.tsx`。
+- **调数值**：计时、资源和计分在 `hooks/useLostTimeBureau.ts`；协议答案与理由在 `data/cases.ts`。
 - **换素材 / 视觉**：样式在 `LostTimeBureau.less`，图标在 `components/LineIcon.tsx`，制作提示词在 `_assets/generate_assets.py`。
 - **调声音**：编辑 `utils/sounds.ts` 的频率、波形、时长和音量。
 - **接排行榜 / 云存档**：以 `totalScore`、`history` 和最终双资源为载荷，以项目 UUID 为 `session_id`；当前版本仅保存本地最佳分。

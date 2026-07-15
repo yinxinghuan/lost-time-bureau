@@ -1,4 +1,4 @@
-type IconName = 'archive' | 'object' | 'memory' | 'echo' | 'close' | 'clock' | 'pause' | 'sound'
+type IconName = 'archive' | 'object' | 'memory' | 'echo' | 'close' | 'clock' | 'pause' | 'sound' | 'check' | 'cross'
 
 const paths: Record<IconName, React.ReactNode> = {
   archive: <><path d="M5 6.5h14v13H5z" /><path d="M4 3h16v4H4zM9 11h6" /></>,
@@ -9,6 +9,8 @@ const paths: Record<IconName, React.ReactNode> = {
   clock: <><circle cx="12" cy="12" r="8" /><path d="M12 8v4l2.5 1.5" /></>,
   pause: <><path d="M8 6v12M16 6v12" /></>,
   sound: <><path d="M5 10v4h3l4 3V7L8 10H5zM16 9c1.5 1.5 1.5 4.5 0 6M18.5 6.5c3 3 3 8 0 11" /></>,
+  check: <><path d="M5 12.5l4.2 4.2L19 7" /></>,
+  cross: <><path d="M6.5 6.5l11 11M17.5 6.5l-11 11" /></>,
 }
 
 export function LineIcon({ name }: { name: IconName }) {

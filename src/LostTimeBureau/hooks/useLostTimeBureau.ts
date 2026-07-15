@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { caseFiles, resolveVerdict } from '../data/cases'
-import type { EvidenceId, Phase, Verdict, VerdictResult } from '../types'
+import { caseFiles, resolveProtocol, resolveVerdict } from '../data/cases'
+import type { EvidenceId, Phase, ProtocolDecision, Verdict, VerdictResult } from '../types'
 
 const CASE_SECONDS = 24
 
@@ -10,6 +10,7 @@ export interface ArchivedRuling {
   result: VerdictResult
   inspected: number
   seconds: number
+  success: boolean
 }
 
 export function useLostTimeBureau() {
@@ -19,11 +20,12 @@ export function useLostTimeBureau() {
   const [seconds, setSeconds] = useState(CASE_SECONDS)
   const [stability, setStability] = useState(60)
   const [humanity, setHumanity] = useState(60)
-  const [calibrations, setCalibrations] = useState(3)
   const [selectedEvidence, setSelectedEvidence] = useState<EvidenceId | null>(null)
   const [inspected, setInspected] = useState<Set<EvidenceId>>(() => new Set())
   const [verdict, setVerdict] = useState<Verdict | null>(null)
   const [result, setResult] = useState<VerdictResult | null>(null)
+  const [protocolDecision, setProtocolDecision] = useState<ProtocolDecision | null>(null)
+  const [lastSuccess, setLastSuccess] = useState(false)
   const [flags, setFlags] = useState<Set<string>>(() => new Set())
   const [history, setHistory] = useState<ArchivedRuling[]>([])
   const [score, setScore] = useState(0)
@@ -40,6 +42,8 @@ export function useLostTimeBureau() {
     setInspected(new Set())
     setVerdict(null)
     setResult(null)
+    setProtocolDecision(null)
+    setLastSuccess(false)
     startedAtRef.current = performance.now()
     pausedAtRef.current = 0
   }, [])
@@ -49,7 +53,6 @@ export function useLostTimeBureau() {
     setPaused(false)
     setStability(60)
     setHumanity(60)
-    setCalibrations(3)
     setFlags(new Set())
     setHistory([])
     setScore(0)
@@ -59,17 +62,11 @@ export function useLostTimeBureau() {
   const openEvidence = useCallback((id: EvidenceId) => {
     if (!currentCase) return
     setInspected((current) => {
-      if (current.has(id)) return current
-      if (current.size >= 2) {
-        if (calibrations <= 0) return current
-        setCalibrations((value) => Math.max(0, value - 1))
-      }
       return new Set(current).add(id)
     })
-    if (inspected.size >= 2 && !inspected.has(id) && calibrations <= 0) return
     setSelectedEvidence(id)
     pausedAtRef.current = performance.now()
-  }, [calibrations, currentCase, inspected])
+  }, [currentCase])
 
   const closeEvidence = useCallback(() => {
     if (pausedAtRef.current) {
@@ -96,14 +93,18 @@ export function useLostTimeBureau() {
   const submitVerdict = useCallback((choice: Verdict) => {
     if (!currentCase || phase !== 'case') return
     const resolved = resolveVerdict(currentCase, choice, flags)
+    const protocolResult = resolveProtocol(currentCase, flags)
+    const success = choice === protocolResult.verdict
     setVerdict(choice)
     setResult(resolved)
+    setProtocolDecision(protocolResult)
+    setLastSuccess(success)
     setStability((value) => Math.max(0, Math.min(100, value + resolved.stabilityDelta)))
     setHumanity((value) => Math.max(0, Math.min(100, value + resolved.humanityDelta)))
     if (resolved.flag) setFlags((current) => new Set(current).add(resolved.flag!))
-    const caseScore = 100 + (inspected.size === 3 ? 25 : 0) + (seconds >= 8 ? 20 : 0) + 35
+    const caseScore = 100 + (inspected.size === 3 ? 25 : 0) + (seconds >= 8 ? 20 : 0) + (success ? 35 : 0)
     setScore((value) => value + caseScore)
-    setHistory((current) => [...current, { caseId: currentCase.id, verdict: choice, result: resolved, inspected: inspected.size, seconds }])
+    setHistory((current) => [...current, { caseId: currentCase.id, verdict: choice, result: resolved, inspected: inspected.size, seconds, success }])
     setPhase('reveal')
     setSelectedEvidence(null)
   }, [currentCase, flags, inspected.size, phase, seconds])
@@ -116,7 +117,6 @@ export function useLostTimeBureau() {
       return
     }
     const next = caseIndex + 1
-    if (next === 3 || next === 5) setCalibrations((value) => Math.min(3, value + 1))
     prepareCase(next)
     setPhase('case')
   }, [caseIndex, humanity, prepareCase, stability])
@@ -167,15 +167,17 @@ export function useLostTimeBureau() {
     seconds,
     stability,
     humanity,
-    calibrations,
     selected,
     inspected,
     verdict,
     result,
+    protocolDecision,
+    lastSuccess,
     flags,
     history,
     score,
     totalScore,
+    correctCount: history.filter((entry) => entry.success).length,
     bestScore,
     start,
     openEvidence,

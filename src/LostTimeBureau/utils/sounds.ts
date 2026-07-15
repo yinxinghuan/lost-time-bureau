@@ -32,6 +32,15 @@ export const sounds = {
     tone(85, 70, 0.1, 0.09, 'sine')
     window.setTimeout(() => tone(kind === 'stay' ? 392 : 523, kind === 'stay' ? 523 : 349, 0.18, 0.075, 'triangle'), 70)
   },
+  outcome: (success: boolean) => {
+    if (success) {
+      tone(440, 554, 0.09, 0.07, 'triangle')
+      window.setTimeout(() => tone(554, 740, 0.13, 0.075, 'triangle'), 90)
+    } else {
+      tone(210, 145, 0.22, 0.08, 'sawtooth')
+    }
+    navigator.vibrate?.(success ? [18, 35, 24] : [55])
+  },
   archive: () => tone(330, 660, 0.16, 0.06, 'triangle'),
   start: () => tone(220, 440, 0.14, 0.06, 'sine'),
   isMuted: () => muted,

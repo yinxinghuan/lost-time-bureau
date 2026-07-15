@@ -1,4 +1,4 @@
-import type { CaseFile, LocalizedText, Verdict, VerdictResult } from '../types'
+import type { CaseFile, LocalizedText, ProtocolDecision, Verdict, VerdictResult } from '../types'
 
 const tx = (zh: string, en: string): LocalizedText => ({ zh, en })
 
@@ -129,4 +129,21 @@ export function resolveVerdict(file: CaseFile, verdict: Verdict, flags: Set<stri
     }
   }
   return base
+}
+
+const protocol: Record<string, ProtocolDecision> = {
+  'lin-mo': { verdict: 'return', reason: tx('关键证据：送回可让 17 人避开已经发生的事故。', 'Key evidence: returning him prevents the recorded deaths of seventeen people.') },
+  'ada-voss': { verdict: 'stay', reason: tx('关键证据：她的洪图与今日地下水读数完全一致。', 'Key evidence: her flood map exactly matches today’s groundwater readings.') },
+  'zhen-ye': { verdict: 'stay', reason: tx('关键证据：11 名真实患者的存活依赖他的医疗经历。', 'Key evidence: eleven living patients depend on his medical history.') },
+  'armand-kline': { verdict: 'return', reason: tx('关键证据：没有未来洪图佐证时，他的工程可能制造灾难。', 'Key evidence: without the future flood map, his project may cause the disaster.') },
+  'qiu-lan': { verdict: 'stay', reason: tx('关键证据：418 人共享同一段街区记忆，证明它曾真实存在。', 'Key evidence: 418 people share the same district memory, proving it once existed.') },
+  'mara-9': { verdict: 'stay', reason: tx('关键证据：两位玛拉都拥有连续九年的独立人生。', 'Key evidence: both Maras have lived nine continuous, independent years.') },
+  'director-zero': { verdict: 'return', reason: tx('关键证据：送回创建者可以关闭制造裂缝的机构闭环。', 'Key evidence: returning the founder closes the institutional loop that created the fracture.') },
+}
+
+export function resolveProtocol(file: CaseFile, flags: Set<string>): ProtocolDecision {
+  if (file.id === 'armand-kline' && flags.has('future_map')) {
+    return { verdict: 'stay', reason: tx('关键证据：艾达的洪图已验证这份蓝图，它现在是预防方案。', 'Key evidence: Ada’s flood map validates the plan; it is now a prevention measure.') }
+  }
+  return protocol[file.id]
 }

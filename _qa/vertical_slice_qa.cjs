@@ -78,6 +78,8 @@ async function runViewport(browser, viewport, suffix) {
   // Case 3.
   await hold(page.getByRole('button', { name: /送回原线|RETURN TO LINE/ }), page)
   await page.waitForTimeout(1500)
+  await page.screenshot({ path: path.join(out, `04c-failure-reveal-${suffix}.png`), fullPage: true })
+  const failureVisible = await page.getByText(/判定失误|RULING FAILED/).isVisible()
   await page.getByRole('button', { name: /归档此裁定|ARCHIVE RULING/ }).click()
   await page.waitForTimeout(250)
 
@@ -101,7 +103,7 @@ async function runViewport(browser, viewport, suffix) {
   const resultAudit = await audit(page, `result-${suffix}`)
 
   await page.close()
-  return { suffix, errors, stillReveal, echoVisible, audits: [startAudit, caseAudit, pauseAudit, evidenceAudit, revealAudit, echoAudit, resultAudit] }
+  return { suffix, errors, stillReveal, echoVisible, failureVisible, audits: [startAudit, caseAudit, pauseAudit, evidenceAudit, revealAudit, echoAudit, resultAudit] }
 }
 
 ;(async () => {

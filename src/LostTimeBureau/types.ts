@@ -40,3 +40,8 @@ export interface CaseFile {
   echoFlag?: string
   echoText?: LocalizedText
 }
+
+export interface ProtocolDecision {
+  verdict: Verdict
+  reason: LocalizedText
+}

@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
-import { HoldVerdictButton } from './components/HoldVerdictButton'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { LineIcon } from './components/LineIcon'
 import { useLostTimeBureau } from './hooks/useLostTimeBureau'
 import { detectLocale, makeTranslator, type Locale } from './i18n'
@@ -75,6 +74,7 @@ export default function LostTimeBureau() {
   const [locale, setLocale] = useState<Locale>(() => detectLocale())
   const [muted, setMuted] = useState(() => sounds.isMuted())
   const [canArchive, setCanArchive] = useState(false)
+  const playedOutcomeRef = useRef('')
   const t = useMemo(() => makeTranslator(locale), [locale])
   const game = useLostTimeBureau()
   const local = (value: LocalizedText) => value[locale]
@@ -94,6 +94,14 @@ export default function LostTimeBureau() {
     const timer = window.setTimeout(() => setCanArchive(true), 1400)
     return () => window.clearTimeout(timer)
   }, [game.phase, game.caseIndex])
+
+  useEffect(() => {
+    if (game.phase !== 'reveal') return
+    const key = `${game.caseIndex}-${game.verdict}`
+    if (playedOutcomeRef.current === key) return
+    playedOutcomeRef.current = key
+    sounds.outcome(game.lastSuccess)
+  }, [game.caseIndex, game.lastSuccess, game.phase, game.verdict])
 
   const beginShift = () => { sounds.start(); game.start() }
   const openEvidence = (id: EvidenceId) => { sounds.instrument(); game.openEvidence(id) }
@@ -132,6 +140,13 @@ export default function LostTimeBureau() {
           </div>
           <div className="ltb-start__console">
             <div className="ltb-start__status"><i /><span>{t('date')}</span></div>
+            <div className="ltb-start__steps" aria-label={locale === 'zh' ? '玩法说明' : 'How to play'}>
+              <span><b>1</b>{locale === 'zh' ? '看证据' : 'READ'}</span>
+              <i />
+              <span><b>2</b>{locale === 'zh' ? '选去留' : 'RULE'}</span>
+              <i />
+              <span><b>3</b>{locale === 'zh' ? '看成败' : 'RESULT'}</span>
+            </div>
             <p>{game.bestScore > 0 ? (locale === 'zh' ? `历史最佳总评 ${game.bestScore} · 今夜有 7 份未归档身份` : `BEST TOTAL ${game.bestScore} · 7 identities await review`) : t('startHint')}</p>
             <button className="ltb-primary" type="button" onPointerDown={beginShift}>
               <LineIcon name="archive" />
@@ -144,7 +159,7 @@ export default function LostTimeBureau() {
       {game.phase === 'case' && (
         <div className="ltb-case">
           <header className="ltb-hud">
-            <div className="ltb-hud__bureau"><LineIcon name="archive" /><span>{locale === 'zh' ? `档案 ${String(game.caseIndex + 1).padStart(2, '0')} / ${String(game.totalCases).padStart(2, '0')} · 校准 ${game.calibrations}` : `FILE ${String(game.caseIndex + 1).padStart(2, '0')} / ${String(game.totalCases).padStart(2, '0')} · CAL ${game.calibrations}`}</span></div>
+            <div className="ltb-hud__bureau"><LineIcon name="archive" /><span>{locale === 'zh' ? `档案 ${String(game.caseIndex + 1).padStart(2, '0')} / ${String(game.totalCases).padStart(2, '0')}` : `FILE ${String(game.caseIndex + 1).padStart(2, '0')} / ${String(game.totalCases).padStart(2, '0')}`}</span></div>
             <div className="ltb-hud__right">
               <button className="ltb-icon-button" type="button" onClick={game.pause} aria-label={locale === 'zh' ? '暂停' : 'Pause'}><LineIcon name="pause" /></button>
               <div className={`ltb-timer${game.seconds <= 5 ? ' is-low' : ''}`}>
@@ -175,26 +190,34 @@ export default function LostTimeBureau() {
           <div className="ltb-instruments">
             {game.currentCase.evidence.map((item) => {
               const read = game.inspected.has(item.id)
-              const locked = game.inspected.size >= 2 && !read && game.calibrations <= 0
               return (
                 <button
-                  className={`ltb-instrument${read ? ' is-read' : ''}${locked ? ' is-locked' : ''}`}
+                  className={`ltb-instrument${read ? ' is-read' : ''}`}
                   type="button"
                   key={item.id}
-                  disabled={locked}
                   onClick={() => openEvidence(item.id)}
                 >
                   <span className="ltb-instrument__dial"><LineIcon name={iconByEvidence[item.id]} /><i /></span>
                   <strong>{local(item.label)}</strong>
-                  <small>{read ? t('inspected') : locked ? (locale === 'zh' ? '校准用尽' : 'NO CAL') : t('inspect')}</small>
+                  <small>{read ? t('inspected') : t('inspect')}</small>
                 </button>
               )
             })}
           </div>
 
           <div className="ltb-rulings">
-            <HoldVerdictButton verdict="stay" label={t('stay')} holdLabel={t('hold')} previewLabel={t('stayPreview')} onCommit={submitVerdict} />
-            <HoldVerdictButton verdict="return" label={t('return')} holdLabel={t('hold')} previewLabel={t('returnPreview')} onCommit={submitVerdict} />
+            <div className="ltb-rulings__head">
+              <strong>{locale === 'zh' ? '作出判定' : 'MAKE YOUR RULING'}</strong>
+              <span>{locale === 'zh' ? '点击后立即揭晓' : 'Tap to reveal immediately'}</span>
+            </div>
+            <button className="ltb-ruling ltb-ruling--stay" type="button" onPointerDown={() => submitVerdict('stay')}>
+              <span>{t('stay')}</span>
+              <small>{locale === 'zh' ? '接纳为现世居民' : 'Grant present residency'}</small>
+            </button>
+            <button className="ltb-ruling ltb-ruling--return" type="button" onPointerDown={() => submitVerdict('return')}>
+              <span>{t('return')}</span>
+              <small>{locale === 'zh' ? '恢复原有时间记录' : 'Restore original record'}</small>
+            </button>
           </div>
         </div>
       )}
@@ -220,6 +243,14 @@ export default function LostTimeBureau() {
 
       {game.phase === 'reveal' && game.verdict && game.result && (
         <div className={`ltb-reveal ltb-reveal--${game.verdict}`}>
+          <div className={`ltb-evaluation ${game.lastSuccess ? 'is-success' : 'is-failure'}`}>
+            <span className="ltb-evaluation__icon"><LineIcon name={game.lastSuccess ? 'check' : 'cross'} /></span>
+            <div>
+              <strong>{game.lastSuccess ? (locale === 'zh' ? '判定成功' : 'RULING SUCCESS') : (locale === 'zh' ? '判定失误' : 'RULING FAILED')}</strong>
+              <small>{game.lastSuccess ? (locale === 'zh' ? '你的选择符合关键证据' : 'Your choice matches the key evidence') : (locale === 'zh' ? '你的选择与关键证据冲突' : 'Your choice conflicts with the key evidence')}</small>
+            </div>
+          </div>
+          {game.protocolDecision && <p className="ltb-reveal__reason">{local(game.protocolDecision.reason)}</p>}
           <header className="ltb-reveal__header"><span>{t('consequence')}</span><strong>{local(game.result.title)}</strong></header>
           <div className="ltb-timeline">
             <div className="ltb-timeline__era ltb-timeline__era--past"><span>PAST LINE</span><strong>{local(game.result.timelinePast)}</strong></div>
@@ -247,7 +278,8 @@ export default function LostTimeBureau() {
             <ResourceMeter label={t('stability')} value={game.stability} tone="stable" />
             <ResourceMeter label={t('humanity')} value={game.humanity} tone="human" />
           </div>
-          <small>{locale === 'zh' ? `已处理 ${game.history.length} / ${game.totalCases} 份档案 · 总评 ${game.totalScore}` : `${game.history.length} / ${game.totalCases} files processed · Total ${game.totalScore}`}</small>
+          <div className="ltb-result__accuracy"><strong>{game.correctCount} / {game.totalCases}</strong><span>{locale === 'zh' ? '判定成功' : 'SUCCESSFUL RULINGS'}</span></div>
+          <small>{locale === 'zh' ? `已处理 ${game.history.length} 份档案 · 总评 ${game.totalScore}` : `${game.history.length} files processed · Total ${game.totalScore}`}</small>
           <button className="ltb-primary" type="button" onPointerDown={beginShift}><LineIcon name="archive" /><span>{t('retry')}</span></button>
         </div>
       )}
