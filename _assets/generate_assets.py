@@ -4,9 +4,8 @@
 import json
 import os
 import subprocess
+import sys
 import time
-import urllib.error
-import urllib.request
 from pathlib import Path
 
 API_URL = "https://chat.aiwaves.tech/aigram/api/gen-image"
@@ -20,6 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PORTRAITS = ROOT / "public" / "portraits"
 POSTER = ROOT / "public" / "poster.png"
 LOG = ROOT / "_assets" / "transit-generation.json"
+PUBLIC_POSTER_REF = "https://yinxinghuan.github.io/lost-time-bureau/poster.png"
 
 STYLE = (
     "narrative editorial science-fiction illustration, grounded retro-futurist municipal archive, "
@@ -40,28 +40,51 @@ CHARACTERS = {
 }
 
 POSTER_PROMPT = (
-    "Square narrative key art for a philosophical time-travel decision game. A lone midnight civil servant sits at "
-    "a dark wooden archive desk in the lower center, facing a frosted brass-framed service window. Behind the glass "
-    "stands a displaced 1930s tram conductor, divided by a thin vertical amber time fracture. On the left half beyond "
-    "him is a rain-soaked 1937 tram crash; on the right half is a vast 2049 night city with one buried river glowing "
-    "under the streets. Brass timeline instruments and paper files frame the scene without looking like interface UI. "
-    "Strong emotional conflict, one human life weighed against a city history, subject and faces kept centrally framed. "
-    "Large clean title at the very top in a generous safe area, with no symbols or marks above it: "
-    "THE LOST TIME OFFICE. Small Chinese subtitle directly below: 时间遗失处. Typography legible, ivory engraved serif. "
-    "Midnight navy, oxidized brass, amber and paper palette, painterly editorial science-fiction poster, atmospheric, "
-    "not cyberpunk, not steampunk, no UI screenshot, no border, no watermark, no date, no year, no numerals anywhere, "
-    "only the requested English title and Chinese subtitle, high-resolution square image, fills frame edge to edge."
+    "Edit the reference into polished square narrative key art for an international English-language audience. "
+    "Preserve the midnight civil servant at the dark wooden archive desk, the brass-framed service window, the "
+    "displaced tram conductor, the vertical amber time fracture, the rainy historic tram scene, the future night city, "
+    "and the midnight navy, oxidized brass, amber and warm paper palette. Keep the scene painterly, cinematic, serious "
+    "and humane. At the very top, retain one exact, large, highly legible ivory engraved-serif title: "
+    "THE LOST TIME OFFICE. Remove the Chinese subtitle completely. Remove every other word, letter, number, date, "
+    "label, glyph, pseudo-text and writing from the entire image, including the tram, buildings, instruments, files, "
+    "drawers and margins. English title only. No subtitle. No logo. No watermark. No border. No interface UI. "
+    "High-resolution square image filling the frame edge to edge."
 )
 
 
-def generate(prompt: str, retries: int = 3) -> str:
-    data = json.dumps({"prompt": prompt}).encode()
+def generate(prompt: str, ref_url: str | None = None, retries: int = 3) -> str:
+    payload = {"prompt": prompt}
+    if ref_url:
+        payload["ref_url"] = ref_url
+    data = json.dumps(payload).encode()
     last = None
     for attempt in range(retries):
         try:
-            req = urllib.request.Request(API_URL, data=data, method="POST", headers=HEADERS)
-            with urllib.request.urlopen(req, timeout=360) as response:
-                body = json.loads(response.read())
+            response = subprocess.run(
+                [
+                    "curl",
+                    "-fsSL",
+                    "--max-time",
+                    "360",
+                    "-X",
+                    "POST",
+                    API_URL,
+                    "-H",
+                    f"Content-Type: {HEADERS['Content-Type']}",
+                    "-H",
+                    f"Origin: {HEADERS['Origin']}",
+                    "-H",
+                    f"Referer: {HEADERS['Referer']}",
+                    "-H",
+                    f"User-Agent: {HEADERS['User-Agent']}",
+                    "--data-binary",
+                    data.decode(),
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            body = json.loads(response.stdout)
             url = body.get("url")
             if not url:
                 raise RuntimeError(f"No URL in response: {body}")
@@ -75,31 +98,42 @@ def generate(prompt: str, retries: int = 3) -> str:
 
 def download(url: str, destination: Path) -> None:
     destination.parent.mkdir(parents=True, exist_ok=True)
-    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-    with urllib.request.urlopen(req, timeout=90) as response:
-        data = response.read()
     source_ext = os.path.splitext(url.split("?")[0])[1].lower()
+    temp = destination if source_ext == ".png" else destination.with_suffix(source_ext or ".jpg")
+    subprocess.run(
+        ["curl", "-fsSL", "--max-time", "90", "-A", HEADERS["User-Agent"], url, "-o", str(temp)],
+        check=True,
+    )
     if source_ext == ".png":
-        destination.write_bytes(data)
         return
-    temp = destination.with_suffix(source_ext or ".jpg")
-    temp.write_bytes(data)
     subprocess.run(["sips", "-s", "format", "png", str(temp), "--out", str(destination)], check=True, capture_output=True)
     temp.unlink(missing_ok=True)
 
 
 def main() -> None:
+    poster_only = "--poster" in sys.argv
+    force = "--force" in sys.argv
     records = []
-    jobs = [(PORTRAITS / name, f"{STYLE}. Character: {description}.") for name, description in CHARACTERS.items()]
-    jobs.append((POSTER, POSTER_PROMPT))
-    for index, (output, prompt) in enumerate(jobs, start=1):
-        if output.exists():
+    jobs = [] if poster_only else [
+        (PORTRAITS / name, f"{STYLE}. Character: {description}.", None)
+        for name, description in CHARACTERS.items()
+    ]
+    jobs.append((POSTER, POSTER_PROMPT, PUBLIC_POSTER_REF))
+    for index, (output, prompt, ref_url) in enumerate(jobs, start=1):
+        if output.exists() and not force:
             print(f"[{index}/{len(jobs)}] skip existing {output.name}", flush=True)
             continue
         print(f"[{index}/{len(jobs)}] generating {output.name}", flush=True)
-        url = generate(prompt)
+        url = generate(prompt, ref_url=ref_url)
         download(url, output)
-        records.append({"file": str(output.relative_to(ROOT)), "url": url, "endpoint": API_URL, "origin": HEADERS["Origin"], "prompt": prompt})
+        records.append({
+            "file": str(output.relative_to(ROOT)),
+            "url": url,
+            "endpoint": API_URL,
+            "origin": HEADERS["Origin"],
+            "ref_url": ref_url,
+            "prompt": prompt,
+        })
         print(f"saved {output}", flush=True)
         time.sleep(2)
     previous = []

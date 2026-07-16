@@ -28,6 +28,7 @@ lost-time-bureau/
     types.ts                   # 案件、证据、裁定和本地化类型
   _qa/                         # Playwright 双尺寸全流程脚本、截图与报告
   _assets/
+    generate_assets.py         # 平台 transit 人物/英文海报生成与来源记录
     generate_manual_plates.py  # 平台 transit 生图、裁切、压缩与来源记录
     manual-generation.json     # 每张插画的接口、来源 URL 和完整 prompt
 ```
@@ -37,6 +38,7 @@ lost-time-bureau/
 - `useLostTimeBureau()` 管理 `start → case → reveal → result`。线索和暂停会补偿倒计时，页面进入后台自动暂停。
 - 判断页只消费人物姓名、对白和 3 个证据入口；职业、时间术语、内部资源与后果不常驻显示。顶部人物状态入口复用当前肖像缩略图，并把进度、倒计时与进入箭头合并成一个 44 px 高触控区。
 - `LostTimeBureau.less` 使用纯 CSS 构成统一档案材料层：暖灰纸、暗蓝打字墨、暗红登记线、方格表、装订边与打孔；主界面仅在 HUD、人物窗口边框、口述记录和裁定按钮上使用这套语言，弹窗、揭晓和结算则完整采用档案页结构。纸纹由低对比度渐变生成，不增加图片请求。
+- `generate_assets.py --poster --force` 使用线上旧海报作为公开 `ref_url`，通过 Aigram transit 重做英文海报并记录请求来源；请求和下载均调用系统 `curl`，避免本机 Python 证书链差异。
 - 主人物窗口通过 `data-file="PSB-<case>"` 显示案卷编号；对白和裁定区通过本地化 `data-label` 生成“来客口述记录 / 裁定签署栏”等档案栏头，英文界面使用对应英文标签。
 - `PortraitImage` 以案件 ID 重新挂载；当前与下一张人物图预载。新图在 `load/error` 或 1.2 秒保险任一路解除遮罩，失败时显示姓名首字剪影。每案开始时也并行预载该人物的 3 张说明书插画，但不阻塞人物和按钮。
 - 线索抽屉一次渲染一项证据，并把原有技术标签映射为“随身物品 / 他说的过去 / 会发生什么”。`ClueVisual` 优先展示 `public/manual/<case>-<evidence>.jpg`，加载前或失败时保留日期环、记忆轨迹和去留分叉线稿；DOM 叠加真实读数，本地 `clueExpanded` 决定是否继续挂载文字细节。

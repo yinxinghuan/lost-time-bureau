@@ -89,5 +89,13 @@
     "endpoint": "https://chat.aiwaves.tech/aigram/api/gen-image",
     "origin": "https://aigram.app",
     "prompt": "narrative editorial science-fiction illustration, grounded retro-futurist municipal archive, midnight navy blue, oxidized brass and warm paper palette, subtle painterly texture, credible human anatomy, cinematic soft desk-lamp key light from upper left and cold blue city rim light, quiet institutional mood, serious humane expression, square 1024x1024 composition filling the entire frame, no border, no text, no logo, no watermark, NOT cyberpunk, NOT steampunk, NOT anime, NOT photorealistic. Character: Chinese family physician with a calm compassionate face and slightly wavy black hair, wearing a plain dark navy medical jacket and stethoscope, tight chest-up frontal identity portrait, head and shoulders fill the frame, simple blue frosted archive glass background."
+  },
+  {
+    "file": "public/poster.png",
+    "url": "https://cdn.aiwaves.tech/prod/telegram/avatar/0/1784196434363271.webp",
+    "endpoint": "https://chat.aiwaves.tech/aigram/api/gen-image",
+    "origin": "https://aigram.app",
+    "ref_url": "https://yinxinghuan.github.io/lost-time-bureau/poster.png",
+    "prompt": "Edit the reference into polished square narrative key art for an international English-language audience. Preserve the midnight civil servant at the dark wooden archive desk, the brass-framed service window, the displaced tram conductor, the vertical amber time fracture, the rainy historic tram scene, the future night city, and the midnight navy, oxidized brass, amber and warm paper palette. Keep the scene painterly, cinematic, serious and humane. At the very top, retain one exact, large, highly legible ivory engraved-serif title: THE LOST TIME OFFICE. Remove the Chinese subtitle completely. Remove every other word, letter, number, date, label, glyph, pseudo-text and writing from the entire image, including the tram, buildings, instruments, files, drawers and margins. English title only. No subtitle. No logo. No watermark. No border. No interface UI. High-resolution square image filling the frame edge to edge."
   }
 ]
