@@ -1,0 +1,817 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Modern Civic System — Vertical Slice</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #101820;
+      --paper: #f1f2ef;
+      --canvas: #c9cdd0;
+      --muted: #5f666a;
+      --blue: #2e61d5;
+      --red: #f14d32;
+      --green: #16856f;
+      --line: #101820;
+      --font: "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+      font-family: var(--font);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-width: 320px; min-height: 100%; }
+    button { font: inherit; }
+    img { display: block; max-width: 100%; }
+    svg { display: block; }
+
+    body {
+      background:
+        linear-gradient(90deg, transparent 0 50%, rgba(255,255,255,.15) 50% 50.1%, transparent 50.1%),
+        #11161c;
+      color: #fff;
+    }
+
+    .review {
+      min-height: 100dvh;
+      display: grid;
+      grid-template-columns: minmax(390px, 520px) minmax(360px, 620px);
+      justify-content: center;
+      align-items: center;
+      gap: 60px;
+      padding: 48px;
+    }
+
+    .preview-column { display: grid; justify-items: center; gap: 16px; }
+    .state-dock {
+      display: flex;
+      width: min(100%, 430px);
+      gap: 4px;
+      padding: 4px;
+      overflow-x: auto;
+      border: 1px solid rgba(255,255,255,.18);
+      background: #171d24;
+      scrollbar-width: none;
+    }
+    .state-dock::-webkit-scrollbar { display: none; }
+    .state-button {
+      flex: 0 0 auto;
+      min-height: 44px;
+      padding: 0 13px;
+      border: 0;
+      background: transparent;
+      color: #939aa3;
+      cursor: pointer;
+      font-size: 10px;
+      font-weight: 850;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .state-button[aria-pressed="true"] { background: var(--paper); color: var(--ink); }
+    .state-button:focus-visible,
+    .civic button:focus-visible { outline: 3px solid #6c96ff; outline-offset: 2px; }
+
+    .device {
+      position: relative;
+      width: min(390px, calc(100vw - 32px));
+      height: min(844px, calc((100vw - 32px) * 2.1641));
+      max-height: 844px;
+      overflow: hidden;
+      border: 8px solid #272d34;
+      border-radius: 42px;
+      background: var(--paper);
+      box-shadow: 0 28px 80px rgba(0,0,0,.5);
+    }
+    .device::before {
+      content: "";
+      position: absolute;
+      z-index: 30;
+      top: 10px;
+      left: 50%;
+      width: 104px;
+      height: 27px;
+      border-radius: 16px;
+      transform: translateX(-50%);
+      background: #08090a;
+      pointer-events: none;
+    }
+
+    .civic {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--font);
+    }
+    .screen {
+      position: absolute;
+      inset: 0;
+      visibility: hidden;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(7px);
+      transition: opacity 160ms ease, transform 160ms ease, visibility 160ms;
+    }
+    .civic[data-state="start"] .screen--start,
+    .civic[data-state="decision"] .screen--decision,
+    .civic[data-state="clue"] .screen--clue,
+    .civic[data-state="correct"] .screen--correct,
+    .civic[data-state="incorrect"] .screen--incorrect,
+    .civic[data-state="map"] .screen--map,
+    .civic[data-state="result"] .screen--result {
+      visibility: visible;
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+
+    .icon-button {
+      display: grid;
+      place-items: center;
+      width: 52px;
+      height: 100%;
+      min-height: 44px;
+      padding: 0;
+      border: 0;
+      border-left: 1px solid var(--ink);
+      background: transparent;
+      color: var(--ink);
+      cursor: pointer;
+    }
+    .icon-button svg,
+    .route-icon {
+      width: 20px;
+      height: 20px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.8;
+      stroke-linecap: square;
+      stroke-linejoin: miter;
+    }
+
+    .button {
+      min-height: 54px;
+      border: 2px solid var(--ink);
+      border-radius: 0;
+      background: var(--paper);
+      color: var(--ink);
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 850;
+      letter-spacing: -.01em;
+      box-shadow: 4px 4px 0 var(--ink);
+      transition: transform 70ms ease, box-shadow 70ms ease;
+      touch-action: manipulation;
+    }
+    .button:active { transform: translate(3px, 3px); box-shadow: 1px 1px 0 var(--ink); }
+    .button--primary { background: var(--blue); color: #fff; }
+    .button--dark { background: var(--ink); color: #fff; box-shadow: 4px 4px 0 var(--red); }
+    .button--green { background: var(--green); color: #fff; }
+    .button--red { background: var(--red); color: #fff; }
+    .button-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .utility {
+      color: var(--muted);
+      font-size: 9px;
+      font-weight: 850;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    /* Start */
+    .start {
+      display: grid;
+      grid-template-rows: minmax(0, 1.18fr) minmax(0, .82fr);
+      height: 100%;
+      padding-top: 24px;
+      background: var(--paper);
+    }
+    .start-hero {
+      position: relative;
+      min-height: 0;
+      overflow: hidden;
+      border-bottom: 2px solid var(--ink);
+      background: var(--ink);
+    }
+    .start-hero img { width: 100%; height: 100%; object-fit: cover; }
+    .start-hero::before {
+      content: "";
+      position: absolute;
+      z-index: 1;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 76px;
+      background: var(--ink);
+    }
+    .start-hero::after {
+      content: "";
+      position: absolute;
+      z-index: 1;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 60%, rgba(16,24,32,.82));
+    }
+    .start-case {
+      position: absolute;
+      z-index: 2;
+      top: 18px;
+      left: 0;
+      width: 64px;
+      height: 58px;
+      display: grid;
+      place-items: center;
+      background: var(--red);
+      color: #fff;
+      font-size: 20px;
+      font-weight: 900;
+    }
+    .start-system-label {
+      position: absolute;
+      z-index: 2;
+      top: 28px;
+      left: 78px;
+      color: #fff;
+      font-size: 10px;
+      font-weight: 850;
+      letter-spacing: .11em;
+    }
+    .start-hero-copy {
+      position: absolute;
+      z-index: 2;
+      left: 18px;
+      right: 18px;
+      bottom: 16px;
+      color: #fff;
+    }
+    .start-hero-copy small { display: block; margin-bottom: 5px; font-size: 9px; font-weight: 850; letter-spacing: .14em; }
+    .start-hero-copy strong { display: block; max-width: 280px; font-size: 25px; line-height: 1.02; letter-spacing: -.035em; }
+    .start-body {
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      gap: 13px;
+      padding: 20px 18px 18px;
+    }
+    .start-title { margin: 0; font-size: 31px; line-height: .98; letter-spacing: -.045em; }
+    .start-subtitle { margin: 0; color: var(--muted); font-size: 15px; font-weight: 600; line-height: 1.42; }
+    .start-steps {
+      align-self: center;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border: 2px solid var(--ink);
+    }
+    .start-step { min-height: 62px; padding: 9px; }
+    .start-step + .start-step { border-left: 1px solid var(--ink); }
+    .start-step b { display: block; color: var(--blue); font-size: 18px; }
+    .start-step span { display: block; margin-top: 4px; font-size: 10px; font-weight: 850; }
+
+    /* Decision */
+    .decision {
+      display: grid;
+      grid-template-rows: 72px minmax(0, 1fr) auto;
+      height: 100%;
+      padding-top: 24px;
+    }
+    .topbar {
+      display: grid;
+      grid-template-columns: 56px 1fr 52px;
+      border-bottom: 2px solid var(--ink);
+    }
+    .case-number {
+      display: grid;
+      place-items: center;
+      background: var(--red);
+      color: #fff;
+      font-size: 18px;
+      font-weight: 900;
+    }
+    .topbar-copy { display: grid; align-content: center; min-width: 0; padding: 0 13px; }
+    .topbar-copy strong { overflow: hidden; font-size: 13px; line-height: 1; text-overflow: ellipsis; white-space: nowrap; }
+    .topbar-copy small { margin-top: 5px; color: var(--muted); font-size: 9px; font-weight: 800; letter-spacing: .1em; }
+    .portrait {
+      position: relative;
+      min-height: 0;
+      margin: 13px 13px 0;
+      overflow: hidden;
+      border: 2px solid var(--ink);
+      background: #153248;
+    }
+    .portrait > img { width: 100%; height: 100%; object-fit: cover; }
+    .person-label {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      min-width: 158px;
+      padding: 11px 13px 10px;
+      border-top: 2px solid var(--ink);
+      border-right: 2px solid var(--ink);
+      background: var(--paper);
+    }
+    .person-label strong { display: block; font-size: 21px; line-height: 1; letter-spacing: -.025em; }
+    .person-label small { display: block; margin-top: 4px; color: var(--muted); font-size: 9px; font-weight: 800; letter-spacing: .08em; }
+    .clue-pin {
+      position: absolute;
+      z-index: 4;
+      display: grid;
+      place-items: center;
+      width: 48px;
+      height: 48px;
+      padding: 0;
+      border: 2px solid var(--ink);
+      border-radius: 0;
+      background: var(--paper);
+      color: var(--ink);
+      cursor: pointer;
+      box-shadow: 4px 4px 0 var(--ink);
+      transition: transform 70ms ease, box-shadow 70ms ease;
+    }
+    .clue-pin:active { transform: translate(3px, 3px); box-shadow: 1px 1px 0 var(--ink); }
+    .clue-pin svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 2; }
+    .clue-pin b {
+      position: absolute;
+      right: -6px;
+      bottom: -6px;
+      display: grid;
+      place-items: center;
+      width: 21px;
+      height: 21px;
+      background: var(--blue);
+      color: #fff;
+      font-size: 10px;
+    }
+    .clue-pin--1 { left: 23px; bottom: 112px; }
+    .clue-pin--2 { right: 28px; top: 116px; }
+    .clue-pin--3 { right: 28px; bottom: 84px; }
+    .decision-bottom { padding: 14px 13px 16px; }
+    .quote {
+      display: grid;
+      grid-template-columns: 6px 1fr;
+      gap: 11px;
+      margin-bottom: 11px;
+    }
+    .quote::before { content: ""; background: var(--blue); }
+    .quote p { margin: 0; font-size: 14px; font-weight: 650; line-height: 1.4; }
+    .decision-meta { display: flex; justify-content: space-between; margin-bottom: 10px; }
+
+    /* Full content pages */
+    .content-screen {
+      display: grid;
+      height: 100%;
+      padding: 48px 13px 15px;
+      background: var(--paper);
+    }
+    .content-head {
+      display: grid;
+      grid-template-columns: 1fr 52px;
+      min-height: 72px;
+      border-bottom: 2px solid var(--ink);
+    }
+    .content-head-copy { display: grid; align-content: center; min-width: 0; }
+    .content-head-copy small { color: var(--red); font-size: 9px; font-weight: 900; letter-spacing: .11em; }
+    .content-head-copy strong { margin-top: 5px; font-size: 23px; line-height: 1; letter-spacing: -.035em; }
+    .clue {
+      grid-template-rows: 72px minmax(198px, 31%) auto minmax(0, 1fr) auto;
+    }
+    .clue-art { margin-top: 12px; overflow: hidden; border: 2px solid var(--ink); }
+    .clue-art img { width: 100%; height: 100%; object-fit: cover; }
+    .fact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      margin-top: 12px;
+      border: 2px solid var(--ink);
+    }
+    .fact { min-height: 82px; padding: 10px; }
+    .fact + .fact { border-left: 1px solid var(--ink); }
+    .fact small { display: block; color: var(--muted); font-size: 9px; font-weight: 850; letter-spacing: .1em; }
+    .fact strong { display: block; margin-top: 9px; font-size: 19px; line-height: 1.05; }
+    .clue-copy {
+      align-self: center;
+      margin: 14px 0;
+      padding-left: 13px;
+      border-left: 6px solid var(--red);
+      font-size: 15px;
+      font-weight: 650;
+      line-height: 1.46;
+    }
+
+    /* Verdict */
+    .verdict {
+      display: grid;
+      grid-template-rows: 116px minmax(0, 1fr) auto auto;
+      height: 100%;
+      padding: 24px 13px 16px;
+      background: var(--paper);
+    }
+    .verdict-banner {
+      display: grid;
+      grid-template-columns: 78px 1fr;
+      border: 2px solid var(--ink);
+      color: #fff;
+    }
+    .verdict--correct .verdict-banner { background: var(--green); }
+    .verdict--incorrect .verdict-banner { background: var(--red); }
+    .verdict-symbol { display: grid; place-items: center; border-right: 2px solid var(--ink); }
+    .verdict-symbol svg { width: 36px; height: 36px; fill: none; stroke: currentColor; stroke-width: 2.6; }
+    .verdict-title { display: grid; align-content: center; padding: 0 14px; }
+    .verdict-title small { font-size: 9px; font-weight: 850; letter-spacing: .12em; }
+    .verdict-title strong { margin-top: 6px; font-size: 29px; line-height: .9; letter-spacing: -.045em; }
+    .verdict-photo {
+      position: relative;
+      min-height: 0;
+      margin-top: 12px;
+      overflow: hidden;
+      border: 2px solid var(--ink);
+    }
+    .verdict-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center 30%; }
+    .verdict-photo::after { content: ""; position: absolute; inset: 55% 0 0; background: linear-gradient(180deg, transparent, rgba(16,24,32,.82)); }
+    .verdict-reason {
+      position: absolute;
+      z-index: 2;
+      left: 13px;
+      right: 13px;
+      bottom: 12px;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 800;
+      line-height: 1.3;
+    }
+    .compare {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      margin: 12px 0;
+      border: 2px solid var(--ink);
+    }
+    .compare-cell { min-height: 70px; padding: 9px 10px; }
+    .compare-cell + .compare-cell { border-left: 1px solid var(--ink); }
+    .compare-cell small { display: block; color: var(--muted); font-size: 9px; font-weight: 850; letter-spacing: .09em; }
+    .compare-cell strong { display: block; margin-top: 8px; font-size: 16px; line-height: 1.1; }
+
+    /* Map */
+    .map {
+      grid-template-rows: 72px auto minmax(0, 1fr) auto;
+    }
+    .city-strip {
+      display: grid;
+      grid-template-columns: 76px 1fr;
+      margin-top: 12px;
+      border: 2px solid var(--ink);
+    }
+    .city-code {
+      display: grid;
+      place-items: center;
+      background: var(--blue);
+      color: #fff;
+      font-size: 17px;
+      font-weight: 900;
+    }
+    .city-copy { padding: 9px 11px; }
+    .city-copy strong { display: block; font-size: 14px; }
+    .city-bars { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 9px; }
+    .city-bar small { display: block; color: var(--muted); font-size: 8px; font-weight: 850; }
+    .bar { height: 5px; margin-top: 4px; background: #c7cacc; }
+    .bar span { display: block; height: 100%; background: var(--blue); }
+    .city-bar:nth-child(2) .bar span { background: var(--red); }
+    .route {
+      position: relative;
+      min-height: 0;
+      margin: 13px 0 12px;
+      padding: 0 9px;
+    }
+    .route::before {
+      content: "";
+      position: absolute;
+      top: 14px;
+      bottom: 14px;
+      left: 50%;
+      width: 2px;
+      transform: translateX(-50%);
+      background: var(--ink);
+    }
+    .route-node {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: 1fr 34px 1fr;
+      align-items: center;
+      min-height: 13.8%;
+    }
+    .route-dot {
+      grid-column: 2;
+      display: grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      justify-self: center;
+      border: 2px solid var(--ink);
+      border-radius: 50%;
+      background: var(--paper);
+      font-size: 10px;
+      font-weight: 900;
+    }
+    .route-card {
+      max-width: 132px;
+      padding: 7px 8px;
+      border: 2px solid var(--ink);
+      background: var(--paper);
+      font-size: 10px;
+      font-weight: 800;
+    }
+    .route-card small { display: block; margin-top: 3px; color: var(--muted); font-size: 8px; letter-spacing: .06em; }
+    .route-node:nth-child(odd) .route-card { grid-column: 1; justify-self: end; margin-right: 9px; }
+    .route-node:nth-child(even) .route-card { grid-column: 3; justify-self: start; margin-left: 9px; }
+    .route-node--stay .route-dot { background: var(--blue); color: #fff; }
+    .route-node--return .route-dot { background: var(--red); color: #fff; }
+    .route-node--current .route-dot { box-shadow: 0 0 0 4px var(--paper), 0 0 0 6px var(--blue); }
+    .route-node--future { opacity: .42; }
+
+    /* Result */
+    .result {
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr) auto;
+      height: 100%;
+      padding: 62px 18px 18px;
+      background: var(--paper);
+    }
+    .result-kicker { margin: 0; color: var(--blue); font-size: 10px; font-weight: 900; letter-spacing: .13em; }
+    .result-score {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      margin-top: 8px;
+      padding-bottom: 18px;
+      border-bottom: 2px solid var(--ink);
+    }
+    .result-score strong { font-size: 94px; line-height: .85; letter-spacing: -.07em; }
+    .result-score span { color: var(--muted); font-size: 32px; font-weight: 750; }
+    .result-body { align-self: center; }
+    .result-body h2 { max-width: 300px; margin: 0; font-size: 32px; line-height: 1; letter-spacing: -.04em; }
+    .result-body p { margin: 14px 0 20px; color: var(--muted); font-size: 16px; font-weight: 600; line-height: 1.45; }
+    .result-facts { display: grid; grid-template-columns: 1fr 1fr; border: 2px solid var(--ink); }
+    .result-fact { min-height: 82px; padding: 10px; }
+    .result-fact + .result-fact { border-left: 1px solid var(--ink); }
+    .result-fact small { color: var(--muted); font-size: 9px; font-weight: 850; letter-spacing: .1em; }
+    .result-fact strong { display: block; margin-top: 9px; font-size: 20px; }
+
+    /* Review notes */
+    .review-notes { max-width: 600px; }
+    .review-label { margin: 0 0 14px; color: #7da0f5; font-size: 11px; font-weight: 850; letter-spacing: .15em; text-transform: uppercase; }
+    .review-notes h1 { margin: 0; font-size: clamp(42px, 6vw, 76px); line-height: .92; letter-spacing: -.055em; }
+    .review-notes > p { max-width: 530px; color: #aeb4bc; font-size: 16px; line-height: 1.65; }
+    .review-grid { display: grid; grid-template-columns: 1fr 1fr; margin-top: 26px; border: 1px solid #3a4149; }
+    .review-item { min-height: 126px; padding: 17px; background: #171d24; }
+    .review-item:nth-child(even) { border-left: 1px solid #3a4149; }
+    .review-item:nth-child(n+3) { border-top: 1px solid #3a4149; }
+    .review-item small { display: block; margin-bottom: 8px; color: #77808a; font-size: 9px; font-weight: 850; letter-spacing: .12em; }
+    .review-item p { margin: 0; color: #d8dce0; font-size: 13px; line-height: 1.55; }
+    .approval {
+      margin-top: 22px;
+      padding: 18px;
+      border-left: 6px solid var(--red);
+      background: #171d24;
+      color: #c6cbd1;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    @media (max-height: 720px) and (min-width: 621px) {
+      .review { align-items: start; padding-block: 20px; }
+      .device { width: 310px; height: 671px; }
+      .preview-column { align-content: start; }
+    }
+
+    @media (max-width: 880px) {
+      .review { grid-template-columns: 1fr; gap: 34px; }
+      .review-notes { order: -1; }
+    }
+
+    @media (max-width: 620px) {
+      body { background: #171d24; }
+      .review {
+        display: block;
+        min-height: 100dvh;
+        padding: 0;
+      }
+      .review-notes { display: none; }
+      .preview-column { display: block; }
+      .state-dock {
+        position: relative;
+        z-index: 50;
+        width: 100%;
+        height: 54px;
+        border: 0;
+        border-bottom: 1px solid #424951;
+      }
+      .device {
+        width: 100vw;
+        height: calc(100dvh - 54px);
+        max-height: none;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+      }
+      .device::before { display: none; }
+      .start, .decision { padding-top: env(safe-area-inset-top); }
+      .content-screen { padding-top: max(24px, env(safe-area-inset-top)); }
+      .result { padding-top: max(36px, env(safe-area-inset-top)); }
+    }
+
+    @media (max-height: 650px) and (max-width: 620px) {
+      .start { grid-template-rows: 48% 52%; }
+      .start-hero::before { height: 58px; }
+      .start-case { top: 9px; height: 48px; }
+      .start-system-label { top: 25px; }
+      .start-hero-copy { bottom: 10px; }
+      .start-hero-copy strong { font-size: 21px; }
+      .start-body { gap: 7px; padding: 12px 18px 10px; }
+      .start-title { font-size: 25px; }
+      .start-subtitle { font-size: 12px; line-height: 1.3; }
+      .start-step { min-height: 43px; padding: 5px 8px; }
+      .start-step b { font-size: 14px; }
+      .start-step span { margin-top: 2px; font-size: 8px; }
+      .decision { grid-template-rows: 64px minmax(0, 1fr) auto; }
+      .portrait { margin-top: 8px; }
+      .decision-bottom { padding-top: 9px; padding-bottom: 10px; }
+      .quote { margin-bottom: 7px; }
+      .quote p { font-size: 12px; line-height: 1.28; }
+      .decision-meta { margin-bottom: 7px; }
+      .button { min-height: 48px; font-size: 14px; }
+      .clue { grid-template-rows: 60px minmax(145px, 29%) auto minmax(0, 1fr) auto; }
+      .content-head { min-height: 60px; }
+      .content-head-copy strong { font-size: 20px; }
+      .clue-art, .fact-grid { margin-top: 8px; }
+      .fact { min-height: 64px; padding: 8px; }
+      .fact strong { margin-top: 5px; font-size: 16px; }
+      .clue-copy { margin: 8px 0; font-size: 13px; line-height: 1.35; }
+      .verdict { grid-template-rows: 92px minmax(0, 1fr) auto auto; padding-top: 10px; }
+      .verdict-title strong { font-size: 24px; }
+      .compare { margin: 8px 0; }
+      .compare-cell { min-height: 58px; padding: 7px; }
+      .map { grid-template-rows: 60px auto minmax(0, 1fr) auto; }
+      .city-strip { margin-top: 8px; }
+      .city-copy { padding: 6px 8px; }
+      .route { margin-block: 7px; }
+      .route-card { padding: 4px 6px; }
+      .result-score strong { font-size: 72px; }
+      .result-body h2 { font-size: 26px; }
+      .result-body p { margin-block: 9px 12px; font-size: 14px; }
+      .result-fact { min-height: 65px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .screen, .button, .clue-pin { transition-duration: 0ms; }
+      html { scroll-behavior: auto; }
+    }
+  </style>
+</head>
+<body>
+  <main class="review">
+    <section class="preview-column" aria-label="Interactive vertical slice">
+      <nav class="state-dock" aria-label="Review states">
+        <button class="state-button" type="button" aria-pressed="true" data-state="start">Start</button>
+        <button class="state-button" type="button" aria-pressed="false" data-state="decision">Decision</button>
+        <button class="state-button" type="button" aria-pressed="false" data-state="clue">Clue</button>
+        <button class="state-button" type="button" aria-pressed="false" data-state="correct">Correct</button>
+        <button class="state-button" type="button" aria-pressed="false" data-state="incorrect">Incorrect</button>
+        <button class="state-button" type="button" aria-pressed="false" data-state="map">Map</button>
+        <button class="state-button" type="button" aria-pressed="false" data-state="result">Result</button>
+      </nav>
+
+      <div class="device">
+        <div class="civic" data-state="start">
+          <section class="screen screen--start start">
+            <div class="start-hero">
+              <img src="../poster.png" alt="The Lost Time Office" />
+              <div class="start-case">01</div>
+              <div class="start-system-label">CITY ROUTING · NIGHT SHIFT</div>
+              <div class="start-hero-copy"><small>SEVEN VISITORS · ONE CITY</small><strong>Every ruling leaves a route behind.</strong></div>
+            </div>
+            <div class="start-body">
+              <h2 class="start-title">THE LOST<br />TIME OFFICE</h2>
+              <p class="start-subtitle">Inspect each displaced visitor. Decide whether they stay—or return to the moment they left.</p>
+              <div class="start-steps"><div class="start-step"><b>01</b><span>INSPECT</span></div><div class="start-step"><b>02</b><span>DECIDE</span></div><div class="start-step"><b>03</b><span>SEE THE COST</span></div></div>
+              <button class="button button--primary" type="button" data-go="decision">START NIGHT SHIFT</button>
+            </div>
+          </section>
+
+          <section class="screen screen--decision decision">
+            <header class="topbar">
+              <div class="case-number">01</div>
+              <div class="topbar-copy"><strong>THE LOST TIME OFFICE</strong><small>VISITOR REVIEW · 24 SEC</small></div>
+              <button class="icon-button" type="button" aria-label="Open time map" data-go="map"><svg class="route-icon" viewBox="0 0 24 24"><path d="M5 19V5l5 3 4-3 5 3v14l-5-3-4 3-5-3Z"/><path d="M10 8v14M14 5v14"/></svg></button>
+            </header>
+            <div class="portrait">
+              <img src="../portraits/lin-mo.png" alt="Lin Mo, tram conductor from 1937" />
+              <button class="clue-pin clue-pin--1" type="button" aria-label="Open clue one" data-go="clue"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.3 15.3 5 5"/></svg><b>1</b></button>
+              <button class="clue-pin clue-pin--2" type="button" aria-label="Open clue two" data-go="clue"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.3 15.3 5 5"/></svg><b>2</b></button>
+              <button class="clue-pin clue-pin--3" type="button" aria-label="Open clue three" data-go="clue"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.3 15.3 5 5"/></svg><b>3</b></button>
+              <div class="person-label"><strong>Lin Mo</strong><small>TRAM CONDUCTOR · 1937</small></div>
+            </div>
+            <footer class="decision-bottom">
+              <div class="quote"><p>“I only walked through the tunnel. When I came out, everyone was staring at glowing glass.”</p></div>
+              <div class="decision-meta"><span class="utility">CLUES READ 0 / 3</span><span class="utility">RULING REQUIRED</span></div>
+              <div class="button-row"><button class="button" type="button" data-go="correct">SEND BACK</button><button class="button button--primary" type="button" data-go="incorrect">LET STAY</button></div>
+            </footer>
+          </section>
+
+          <section class="screen screen--clue content-screen clue">
+            <header class="content-head">
+              <div class="content-head-copy"><small>CLUE 03 / CONSEQUENCE</small><strong>WHAT HAPPENS NEXT</strong></div>
+              <button class="icon-button" type="button" aria-label="Close clue" data-go="decision"><svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5 5 19"/></svg></button>
+            </header>
+            <div class="clue-art"><img src="../manual/lin-mo-echo.jpg" alt="Lin Mo opening the damaged tram door" /></div>
+            <div class="fact-grid"><div class="fact"><small>RETURN POINT</small><strong>+43 sec</strong></div><div class="fact"><small>PASSENGERS</small><strong>17 saved</strong></div></div>
+            <p class="clue-copy">Lin Mo opens the crushed tram door. He dies during the rescue. The city gains one unnamed hero.</p>
+            <button class="button button--dark" type="button" data-go="decision">BACK TO VISITOR</button>
+          </section>
+
+          <section class="screen screen--correct verdict verdict--correct">
+            <header class="verdict-banner">
+              <div class="verdict-symbol"><svg viewBox="0 0 24 24"><path d="m4 13 5 5L20 6"/></svg></div>
+              <div class="verdict-title"><small>RULING 01 / CONFIRMED</small><strong>CORRECT</strong></div>
+            </header>
+            <div class="verdict-photo">
+              <img src="../portraits/lin-mo.png" alt="Lin Mo" />
+              <div class="verdict-reason">The decisive clue points back to 1937.</div>
+            </div>
+            <div class="compare"><div class="compare-cell"><small>YOU CHOSE</small><strong>SEND BACK</strong></div><div class="compare-cell"><small>CLUES POINT TO</small><strong>SEND BACK</strong></div></div>
+            <button class="button button--green" type="button" data-go="map">SEE THE NEW ROUTE</button>
+          </section>
+
+          <section class="screen screen--incorrect verdict verdict--incorrect">
+            <header class="verdict-banner">
+              <div class="verdict-symbol"><svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5 5 19"/></svg></div>
+              <div class="verdict-title"><small>RULING 01 / CONFLICT</small><strong>INCORRECT</strong></div>
+            </header>
+            <div class="verdict-photo">
+              <img src="../portraits/lin-mo.png" alt="Lin Mo" />
+              <div class="verdict-reason">Seventeen lives depend on his return.</div>
+            </div>
+            <div class="compare"><div class="compare-cell"><small>YOU CHOSE</small><strong>LET STAY</strong></div><div class="compare-cell"><small>CLUES POINT TO</small><strong>SEND BACK</strong></div></div>
+            <button class="button button--red" type="button" data-go="map">SEE THE CONSEQUENCE</button>
+          </section>
+
+          <section class="screen screen--map content-screen map">
+            <header class="content-head">
+              <div class="content-head-copy"><small>LIVE SYSTEM VIEW</small><strong>TONIGHT’S ROUTE</strong></div>
+              <button class="icon-button" type="button" aria-label="Close map" data-go="decision"><svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5 5 19"/></svg></button>
+            </header>
+            <div class="city-strip">
+              <div class="city-code">2049</div>
+              <div class="city-copy"><strong>THE CITY NOW</strong><div class="city-bars"><div class="city-bar"><small>HISTORY</small><div class="bar"><span style="width:72%"></span></div></div><div class="city-bar"><small>PEOPLE</small><div class="bar"><span style="width:61%"></span></div></div></div></div>
+            </div>
+            <div class="route">
+              <div class="route-node route-node--return"><div class="route-card">LIN MO<small>SENT BACK</small></div><div class="route-dot">01</div></div>
+              <div class="route-node route-node--stay"><div class="route-dot">02</div><div class="route-card">ADA VOSS<small>LET STAY</small></div></div>
+              <div class="route-node route-node--current"><div class="route-card">ZHEN YE<small>YOU ARE HERE</small></div><div class="route-dot">03</div></div>
+              <div class="route-node route-node--future"><div class="route-dot">04</div><div class="route-card">ARMAND<small>NOT ARRIVED</small></div></div>
+              <div class="route-node route-node--future"><div class="route-card">QIU LAN<small>NOT ARRIVED</small></div><div class="route-dot">05</div></div>
+              <div class="route-node route-node--future"><div class="route-dot">06</div><div class="route-card">MARA-9<small>NOT ARRIVED</small></div></div>
+              <div class="route-node route-node--future"><div class="route-card">DIRECTOR ZERO<small>NOT ARRIVED</small></div><div class="route-dot">07</div></div>
+            </div>
+            <button class="button button--primary" type="button" data-go="decision">BACK TO VISITOR</button>
+          </section>
+
+          <section class="screen screen--result result">
+            <p class="result-kicker">NIGHT SHIFT COMPLETE</p>
+            <div class="result-score"><strong>5</strong><span>/ 7</span></div>
+            <div class="result-body">
+              <h2>THE CITY IS STEADIER—AND COLDER.</h2>
+              <p>You protected history more often than the people living inside it.</p>
+              <div class="result-facts"><div class="result-fact"><small>SHIFT SCORE</small><strong>1,365</strong></div><div class="result-fact"><small>BEST</small><strong>1,420</strong></div></div>
+            </div>
+            <button class="button button--primary" type="button" data-go="start">RUN ANOTHER SHIFT</button>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <aside class="review-notes">
+      <p class="review-label">Selected direction C · complete vertical slice</p>
+      <h1>Modern Civic System</h1>
+      <p>这里验证的不是一张漂亮截图，而是同一视觉系统能否覆盖完整流程。使用上方状态栏查看全部页面，也可以直接点击手机内按钮走一遍流程。</p>
+      <div class="review-grid">
+        <div class="review-item"><small>TYPE</small><p>Helvetica Neue / Arial / Noto Sans SC。整套界面不再出现衬线、等宽或仿打字机字体。</p></div>
+        <div class="review-item"><small>STRUCTURE</small><p>统一 2 px 黑线、直角网格、56 px 案件编号和 4 px 实体阴影。</p></div>
+        <div class="review-item"><small>FEEDBACK</small><p>CORRECT 与 INCORRECT 使用文字、SVG 图标、颜色和选择对照四重确认。</p></div>
+        <div class="review-item"><small>SCOPE</small><p>开始、判定、线索、成功、失败、地图与结算已覆盖；尚未替换线上游戏本体。</p></div>
+      </div>
+      <div class="approval">需要评审的核心问题：这套系统是否足够清晰、现代和有识别度？如果方向成立，下一步才把它迁移到完整游戏，并逐案处理人物裁切与英文文案。</div>
+    </aside>
+  </main>
+
+  <script>
+    const civic = document.querySelector('.civic');
+    const stateButtons = [...document.querySelectorAll('.state-button')];
+
+    function showState(state) {
+      civic.dataset.state = state;
+      stateButtons.forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.state === state)));
+      const active = stateButtons.find((button) => button.dataset.state === state);
+      active?.scrollIntoView({ block: 'nearest', inline: 'center' });
+    }
+
+    stateButtons.forEach((button) => button.addEventListener('click', () => showState(button.dataset.state)));
+    document.querySelectorAll('[data-go]').forEach((button) => button.addEventListener('click', () => showState(button.dataset.go)));
+  </script>
+</body>
+</html>

@@ -17,6 +17,8 @@ lost-time-bureau/
     poster.png                 # 开始页与游戏 meta 海报
     portraits/                 # 7 位来客肖像
     manual/                    # 7 案 × 3 类线索的说明书插画
+    ui-review/                 # A/B/C 初始方向评审页
+    ui-review-c/               # 已选 C 方向的七状态交互垂直切片
   src/LostTimeBureau/
     LostTimeBureau.tsx         # 开始、判断、分层线索、三层揭晓、状态资讯、暂停与结算
     LostTimeBureau.less        # 深夜人物窗口 × 旧式官僚档案视觉系统与响应式规则
@@ -39,6 +41,7 @@ lost-time-bureau/
 - 判断页只消费人物姓名、对白和 3 个证据入口；职业、时间术语、内部资源与后果不常驻显示。顶部人物状态入口复用当前肖像缩略图，并把进度、倒计时与进入箭头合并成一个 44 px 高触控区。
 - `LostTimeBureau.less` 使用纯 CSS 构成统一档案材料层：暖灰纸、暗蓝打字墨、暗红登记线、方格表、装订边与打孔；主界面仅在 HUD、人物窗口边框、口述记录和裁定按钮上使用这套语言，弹窗、揭晓和结算则完整采用档案页结构。纸纹由低对比度渐变生成，不增加图片请求。
 - `generate_assets.py --poster --force` 使用线上旧海报作为公开 `ref_url`，通过 Aigram transit 重做英文海报并记录请求来源；请求和下载均调用系统 `curl`，避免本机 Python 证书链差异。
+- `public/ui-review-c/index.html` 是与游戏运行逻辑隔离的评审原型，使用静态 DOM 与 `data-state` 切换 Start、Decision、Clue、Correct、Incorrect、Map、Result；用户确认前不影响 `src/` 中的线上游戏。
 - 主人物窗口通过 `data-file="PSB-<case>"` 显示案卷编号；对白和裁定区通过本地化 `data-label` 生成“来客口述记录 / 裁定签署栏”等档案栏头，英文界面使用对应英文标签。
 - `PortraitImage` 以案件 ID 重新挂载；当前与下一张人物图预载。新图在 `load/error` 或 1.2 秒保险任一路解除遮罩，失败时显示姓名首字剪影。每案开始时也并行预载该人物的 3 张说明书插画，但不阻塞人物和按钮。
 - 线索抽屉一次渲染一项证据，并把原有技术标签映射为“随身物品 / 他说的过去 / 会发生什么”。`ClueVisual` 优先展示 `public/manual/<case>-<evidence>.jpg`，加载前或失败时保留日期环、记忆轨迹和去留分叉线稿；DOM 叠加真实读数，本地 `clueExpanded` 决定是否继续挂载文字细节。
