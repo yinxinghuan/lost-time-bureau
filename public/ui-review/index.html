@@ -1,0 +1,933 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Lost Time Office — UI Direction Review</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --page-bg: #0d0f12;
+      --page-panel: #15181d;
+      --page-line: rgba(255,255,255,.12);
+      --page-copy: #f4f0e8;
+      --page-muted: #9da2ab;
+      --page-accent: #e46d4d;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      background:
+        radial-gradient(circle at 18% 0%, rgba(68, 93, 133, .18), transparent 32rem),
+        var(--page-bg);
+      color: var(--page-copy);
+    }
+    button { font: inherit; }
+    img { display: block; max-width: 100%; }
+    svg { display: block; }
+
+    .review {
+      width: min(1440px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 64px 0 96px;
+    }
+    .review-header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(260px, 420px);
+      gap: 48px;
+      align-items: end;
+      padding-bottom: 34px;
+      border-bottom: 1px solid var(--page-line);
+    }
+    .review-kicker {
+      margin: 0 0 16px;
+      color: #b9c8e1;
+      font-size: 12px;
+      font-weight: 750;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+    .review h1 {
+      max-width: 850px;
+      margin: 0;
+      font: 500 clamp(42px, 7vw, 94px)/.94 "Iowan Old Style", "Baskerville", Georgia, serif;
+      letter-spacing: -.045em;
+    }
+    .review-intro {
+      margin: 0;
+      color: var(--page-muted);
+      font-size: 16px;
+      line-height: 1.65;
+    }
+    .review-intro strong { color: var(--page-copy); font-weight: 650; }
+
+    .review-guide {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 22px 0 54px;
+    }
+    .guide-chip {
+      padding: 9px 12px;
+      border: 1px solid var(--page-line);
+      border-radius: 999px;
+      color: #c6c9cf;
+      font-size: 12px;
+    }
+
+    .directions {
+      display: grid;
+      gap: 40px;
+    }
+    .direction {
+      overflow: hidden;
+      border: 1px solid var(--page-line);
+      border-radius: 24px;
+      background: var(--page-panel);
+      box-shadow: 0 24px 80px rgba(0,0,0,.3);
+    }
+    .direction-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 24px;
+      align-items: start;
+      padding: 28px 30px;
+      border-bottom: 1px solid var(--page-line);
+    }
+    .direction-index {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      margin-bottom: 18px;
+      border-radius: 50%;
+      background: #f5f1e8;
+      color: #111317;
+      font-size: 13px;
+      font-weight: 800;
+    }
+    .direction h2 {
+      margin: 0 0 10px;
+      font-size: clamp(26px, 4vw, 42px);
+      line-height: 1;
+      letter-spacing: -.035em;
+    }
+    .direction-summary {
+      max-width: 740px;
+      margin: 0;
+      color: var(--page-muted);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+    .direction-tags {
+      display: flex;
+      max-width: 360px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    .direction-tags span {
+      padding: 7px 10px;
+      border: 1px solid var(--page-line);
+      border-radius: 999px;
+      color: #c4c7cd;
+      font-size: 11px;
+      line-height: 1;
+    }
+
+    .direction-stage {
+      display: grid;
+      grid-template-columns: minmax(360px, 430px) minmax(0, 1fr);
+      gap: 46px;
+      align-items: center;
+      min-height: 860px;
+      padding: 42px;
+      background: #0b0d10;
+    }
+    .phone-wrap { display: grid; justify-items: center; gap: 18px; }
+    .state-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      width: min(100%, 390px);
+      padding: 4px;
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 12px;
+      background: rgba(255,255,255,.05);
+    }
+    .state-tab {
+      min-height: 44px;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: #8f949d;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 750;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      transition: background .18s ease, color .18s ease;
+    }
+    .state-tab[aria-selected="true"] {
+      background: #f1ede4;
+      color: #15171b;
+    }
+    .phone {
+      position: relative;
+      width: min(100%, 390px);
+      aspect-ratio: 390 / 844;
+      overflow: hidden;
+      border: 8px solid #25282e;
+      border-radius: 42px;
+      background: #111;
+      box-shadow: 0 26px 70px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.1);
+    }
+    .phone::before {
+      content: "";
+      position: absolute;
+      z-index: 30;
+      top: 10px;
+      left: 50%;
+      width: 104px;
+      height: 27px;
+      border-radius: 16px;
+      transform: translateX(-50%);
+      background: #08090a;
+    }
+    .phone-state {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity .22s ease, transform .22s ease;
+      transform: translateY(8px);
+    }
+    .phone[data-state="play"] .phone-state--play,
+    .phone[data-state="detail"] .phone-state--detail {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+    .concept-notes {
+      display: grid;
+      align-content: center;
+      gap: 28px;
+      max-width: 660px;
+    }
+    .concept-thesis {
+      margin: 0;
+      color: #f4f0e8;
+      font: 400 clamp(26px, 4vw, 48px)/1.08 "Iowan Old Style", "Baskerville", Georgia, serif;
+      letter-spacing: -.03em;
+    }
+    .note-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1px;
+      overflow: hidden;
+      border: 1px solid var(--page-line);
+      border-radius: 16px;
+      background: var(--page-line);
+    }
+    .note {
+      min-height: 118px;
+      padding: 18px;
+      background: #111419;
+    }
+    .note small {
+      display: block;
+      margin-bottom: 9px;
+      color: #777d87;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+    .note p { margin: 0; color: #c7cad0; font-size: 13px; line-height: 1.55; }
+    .risk {
+      padding-left: 16px;
+      border-left: 3px solid var(--page-accent);
+      color: #aeb2ba;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    /* Shared prototype controls */
+    .proto-icon {
+      display: inline-grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      border: 0;
+      background: transparent;
+      color: inherit;
+    }
+    .proto-icon svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+    .clue-pin {
+      position: absolute;
+      z-index: 4;
+      display: grid;
+      place-items: center;
+      width: 48px;
+      height: 48px;
+      border: 0;
+      border-radius: 50%;
+      cursor: pointer;
+      font-weight: 800;
+      box-shadow: 0 6px 18px rgba(0,0,0,.3);
+    }
+    .clue-pin svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 2; }
+    .clue-pin b {
+      position: absolute;
+      right: -3px;
+      bottom: -2px;
+      display: grid;
+      place-items: center;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      font-size: 10px;
+    }
+    .choice-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .choice {
+      min-height: 56px;
+      border: 0;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 780;
+    }
+
+    /* Direction A — Editorial */
+    .direction--a .direction-stage { background: #dad4c8; }
+    .a-screen {
+      height: 100%;
+      background: #f3efe6;
+      color: #181816;
+      font-family: "Avenir Next", Avenir, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    .a-play {
+      display: grid;
+      grid-template-rows: 82px minmax(0, 1fr) auto;
+      height: 100%;
+      padding-top: 24px;
+    }
+    .a-top {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: end;
+      padding: 0 22px 14px;
+      border-bottom: 1px solid #222;
+    }
+    .a-top small { display: block; font-size: 10px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+    .a-top strong { display: block; margin-top: 5px; font: 600 20px/1 "Iowan Old Style", Georgia, serif; }
+    .a-progress { color: #68655f; font-size: 12px; font-weight: 750; }
+    .a-photo {
+      position: relative;
+      min-height: 0;
+      margin: 16px 16px 0;
+      overflow: hidden;
+      background: #132b39;
+    }
+    .a-photo > img { width: 100%; height: 100%; object-fit: cover; }
+    .a-photo::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 58%, rgba(7,12,17,.88));
+      pointer-events: none;
+    }
+    .a-name {
+      position: absolute;
+      z-index: 3;
+      left: 18px;
+      bottom: 18px;
+      color: #fff;
+    }
+    .a-name small { display: block; color: rgba(255,255,255,.67); font-size: 10px; font-weight: 750; letter-spacing: .15em; }
+    .a-name strong { display: block; margin-top: 4px; font: 600 34px/1 "Iowan Old Style", Georgia, serif; }
+    .a-pin { background: #f4efe5; color: #17212b; }
+    .a-pin b { background: #e75d3f; color: #fff; }
+    .a-pin--1 { left: 22px; bottom: 118px; }
+    .a-pin--2 { right: 26px; top: 115px; }
+    .a-pin--3 { right: 30px; bottom: 82px; }
+    .a-bottom {
+      padding: 17px 16px 18px;
+      background: #f3efe6;
+    }
+    .a-quote {
+      margin: 0 4px 15px;
+      font: 500 16px/1.38 "Iowan Old Style", Georgia, serif;
+    }
+    .a-meta {
+      display: flex;
+      justify-content: space-between;
+      margin: 0 4px 10px;
+      color: #77736c;
+      font-size: 10px;
+      font-weight: 750;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .a-choice { border: 1px solid #191919; background: transparent; color: #191919; }
+    .a-choice--primary { border-color: #e75d3f; background: #e75d3f; color: #fff; }
+    .a-detail {
+      display: grid;
+      grid-template-rows: auto 265px auto 1fr auto;
+      height: 100%;
+      padding: 48px 20px 18px;
+      background: #f3efe6;
+    }
+    .a-detail-head { display: flex; justify-content: space-between; align-items: start; }
+    .a-detail-head .proto-icon { flex: 0 0 44px; }
+    .a-detail-head small { color: #e75d3f; font-size: 10px; font-weight: 850; letter-spacing: .15em; }
+    .a-detail h3 { margin: 4px 0 18px; font: 600 38px/.95 "Iowan Old Style", Georgia, serif; }
+    .a-detail-art { overflow: hidden; border: 1px solid #222; }
+    .a-detail-art img { width: 100%; height: 100%; object-fit: cover; }
+    .a-detail-stat {
+      display: grid;
+      grid-template-columns: 88px 1fr;
+      gap: 14px;
+      padding: 16px 0;
+      border-bottom: 1px solid #bcb5a9;
+    }
+    .a-detail-stat strong { font: 600 28px/1 "Iowan Old Style", Georgia, serif; }
+    .a-detail-stat span { color: #64615a; font-size: 12px; line-height: 1.45; }
+    .a-detail-copy { align-self: center; margin: 0; font: 500 17px/1.5 "Iowan Old Style", Georgia, serif; }
+    .a-detail-button { min-height: 52px; border: 0; background: #1a1a18; color: #fff; font-weight: 800; }
+
+    /* Direction B — Cinema */
+    .direction--b .direction-stage { background: #070b10; }
+    .b-screen {
+      height: 100%;
+      background: #071018;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif;
+    }
+    .b-play { position: relative; height: 100%; overflow: hidden; }
+    .b-play > img { width: 100%; height: 100%; object-fit: cover; }
+    .b-play::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(180deg, rgba(5,9,13,.82) 0%, transparent 23%),
+        linear-gradient(180deg, transparent 48%, rgba(4,8,12,.96) 77%);
+    }
+    .b-hud {
+      position: absolute;
+      z-index: 3;
+      top: 34px;
+      left: 18px;
+      right: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .b-hud-label { font-size: 11px; font-weight: 750; letter-spacing: .12em; }
+    .b-hud-label span { color: #73d8e4; }
+    .b-time {
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      border: 1px solid rgba(255,255,255,.32);
+      border-radius: 50%;
+      font-size: 13px;
+      font-weight: 780;
+      backdrop-filter: blur(10px);
+    }
+    .b-pin {
+      border: 1px solid rgba(255,255,255,.72);
+      background: rgba(6,16,24,.68);
+      color: #fff;
+      backdrop-filter: blur(10px);
+    }
+    .b-pin b { background: #73d8e4; color: #061016; }
+    .b-pin--1 { left: 23px; bottom: 246px; }
+    .b-pin--2 { right: 28px; top: 190px; }
+    .b-pin--3 { right: 34px; bottom: 285px; }
+    .b-content {
+      position: absolute;
+      z-index: 3;
+      left: 18px;
+      right: 18px;
+      bottom: 18px;
+    }
+    .b-content small { color: #73d8e4; font-size: 10px; font-weight: 800; letter-spacing: .18em; }
+    .b-content h3 { margin: 7px 0 8px; font-size: 32px; line-height: 1; letter-spacing: -.035em; }
+    .b-content blockquote { margin: 0 0 16px; color: rgba(255,255,255,.78); font-size: 15px; line-height: 1.4; }
+    .b-meta { display: flex; gap: 10px; margin-bottom: 13px; color: rgba(255,255,255,.56); font-size: 10px; font-weight: 700; }
+    .b-choice { border-radius: 9px; background: #f4f3ef; color: #081017; }
+    .b-choice--primary { background: #e5723d; color: #fff; }
+    .b-detail { position: absolute; height: 100%; background: #071018; overflow: hidden; }
+    .b-detail-visual {
+      position: relative;
+      height: 48%;
+      overflow: hidden;
+    }
+    .b-detail-visual img { width: 100%; height: 100%; object-fit: cover; }
+    .b-detail-visual::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 48%, #071018 100%); }
+    .b-close { position: absolute; z-index: 4; top: 38px; right: 18px; border: 1px solid rgba(255,255,255,.35); border-radius: 50%; color: #fff; backdrop-filter: blur(8px); }
+    .b-detail-copy {
+      position: relative;
+      z-index: 2;
+      margin-top: -22px;
+      padding: 0 22px 22px;
+    }
+    .b-detail-copy small { color: #73d8e4; font-size: 10px; font-weight: 800; letter-spacing: .16em; }
+    .b-detail-copy h3 { margin: 8px 0 14px; font-size: 34px; line-height: 1; letter-spacing: -.035em; }
+    .b-signal {
+      display: grid;
+      grid-template-columns: 68px 1fr;
+      gap: 15px;
+      align-items: center;
+      padding: 14px 0;
+      border-block: 1px solid rgba(255,255,255,.15);
+    }
+    .b-signal-ring {
+      display: grid;
+      place-items: center;
+      width: 64px;
+      height: 64px;
+      border: 2px solid #73d8e4;
+      border-radius: 50%;
+      color: #73d8e4;
+      font-size: 12px;
+      font-weight: 850;
+    }
+    .b-signal p { margin: 0; color: rgba(255,255,255,.72); font-size: 13px; line-height: 1.45; }
+    .b-consequence {
+      margin: 20px 0 18px;
+      color: #fff;
+      font-size: 18px;
+      line-height: 1.4;
+      letter-spacing: -.01em;
+    }
+    .b-detail-button { width: 100%; min-height: 54px; border: 0; border-radius: 9px; background: #73d8e4; color: #061016; font-weight: 850; }
+
+    /* Direction C — Modern civic */
+    .direction--c .direction-stage { background: #c9cdd0; }
+    .c-screen {
+      height: 100%;
+      background: #f1f2ef;
+      color: #101820;
+      font-family: "Helvetica Neue", Arial, sans-serif;
+    }
+    .c-play {
+      display: grid;
+      grid-template-rows: 72px minmax(0, 1fr) auto;
+      height: 100%;
+      padding-top: 24px;
+    }
+    .c-top {
+      display: grid;
+      grid-template-columns: 56px 1fr 52px;
+      align-items: stretch;
+      border-bottom: 2px solid #101820;
+    }
+    .c-case {
+      display: grid;
+      place-items: center;
+      background: #f14d32;
+      color: #fff;
+      font-size: 18px;
+      font-weight: 900;
+    }
+    .c-title { display: grid; align-content: center; padding: 0 13px; }
+    .c-title strong { font-size: 13px; line-height: 1; letter-spacing: -.01em; }
+    .c-title small { margin-top: 5px; color: #5f666a; font-size: 9px; font-weight: 750; letter-spacing: .12em; }
+    .c-menu { border-left: 1px solid #101820; }
+    .c-portrait {
+      position: relative;
+      min-height: 0;
+      margin: 13px 13px 0;
+      overflow: hidden;
+      border: 2px solid #101820;
+    }
+    .c-portrait > img { width: 100%; height: 100%; object-fit: cover; }
+    .c-person-label {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      min-width: 158px;
+      padding: 11px 13px;
+      background: #f1f2ef;
+      border-top: 2px solid #101820;
+      border-right: 2px solid #101820;
+    }
+    .c-person-label strong { display: block; font-size: 21px; line-height: 1; letter-spacing: -.025em; }
+    .c-person-label small { display: block; margin-top: 4px; color: #5f666a; font-size: 9px; font-weight: 750; letter-spacing: .08em; }
+    .c-pin { border: 2px solid #101820; background: #f4f4f0; color: #101820; border-radius: 4px; box-shadow: 4px 4px 0 #101820; }
+    .c-pin b { right: -6px; bottom: -6px; border-radius: 2px; background: #2e61d5; color: #fff; }
+    .c-pin--1 { left: 22px; bottom: 112px; }
+    .c-pin--2 { right: 28px; top: 116px; }
+    .c-pin--3 { right: 28px; bottom: 84px; }
+    .c-bottom { padding: 14px 13px 16px; }
+    .c-quote {
+      display: grid;
+      grid-template-columns: 6px 1fr;
+      gap: 11px;
+      margin-bottom: 12px;
+    }
+    .c-quote::before { content: ""; background: #2e61d5; }
+    .c-quote p { margin: 0; font-size: 14px; font-weight: 600; line-height: 1.4; }
+    .c-checks { display: flex; justify-content: space-between; margin-bottom: 10px; color: #61676a; font-size: 9px; font-weight: 800; letter-spacing: .08em; }
+    .c-choice { border: 2px solid #101820; border-radius: 0; background: transparent; color: #101820; box-shadow: 3px 3px 0 #101820; }
+    .c-choice--primary { background: #2e61d5; color: #fff; }
+    .c-detail {
+      display: grid;
+      grid-template-rows: 72px 250px auto 1fr auto;
+      height: 100%;
+      padding: 24px 13px 15px;
+      background: #f1f2ef;
+    }
+    .c-detail-head {
+      display: grid;
+      grid-template-columns: 1fr 52px;
+      border-bottom: 2px solid #101820;
+    }
+    .c-detail-head div { display: grid; align-content: center; }
+    .c-detail-head small { color: #f14d32; font-size: 9px; font-weight: 900; letter-spacing: .12em; }
+    .c-detail-head strong { margin-top: 5px; font-size: 24px; line-height: 1; letter-spacing: -.03em; }
+    .c-close { border-left: 1px solid #101820; }
+    .c-detail-art { margin-top: 12px; overflow: hidden; border: 2px solid #101820; }
+    .c-detail-art img { width: 100%; height: 100%; object-fit: cover; }
+    .c-fact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      margin-top: 12px;
+      border: 2px solid #101820;
+    }
+    .c-fact { min-height: 82px; padding: 10px; }
+    .c-fact + .c-fact { border-left: 1px solid #101820; }
+    .c-fact small { display: block; color: #636a6f; font-size: 9px; font-weight: 850; letter-spacing: .1em; }
+    .c-fact strong { display: block; margin-top: 9px; font-size: 19px; line-height: 1.05; }
+    .c-detail-copy {
+      align-self: center;
+      margin: 15px 0;
+      padding-left: 13px;
+      border-left: 6px solid #f14d32;
+      font-size: 15px;
+      font-weight: 600;
+      line-height: 1.45;
+    }
+    .c-detail-button { min-height: 54px; border: 2px solid #101820; background: #101820; color: #fff; font-weight: 850; box-shadow: 4px 4px 0 #f14d32; }
+
+    .direction--a .concept-thesis,
+    .direction--c .concept-thesis { color: #17191b; }
+    .direction--a .risk,
+    .direction--c .risk { color: #55595f; }
+
+    .selection {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 28px;
+      align-items: center;
+      margin-top: 46px;
+      padding: 28px 30px;
+      border: 1px solid var(--page-line);
+      border-radius: 20px;
+      background: #14171b;
+    }
+    .selection h2 { margin: 0 0 8px; font-size: 24px; letter-spacing: -.025em; }
+    .selection p { margin: 0; color: var(--page-muted); font-size: 14px; line-height: 1.6; }
+    .selection-options { display: flex; gap: 8px; }
+    .selection-button {
+      min-width: 58px;
+      min-height: 48px;
+      border: 1px solid var(--page-line);
+      border-radius: 10px;
+      background: transparent;
+      color: #fff;
+      cursor: pointer;
+      font-weight: 850;
+    }
+    .selection-button[aria-pressed="true"] { border-color: #f3eee5; background: #f3eee5; color: #111317; }
+    .selection-result { grid-column: 1 / -1; min-height: 22px; color: #c5cad2; font-size: 13px; }
+
+    @media (max-width: 900px) {
+      .review-header { grid-template-columns: 1fr; gap: 24px; }
+      .direction-head { grid-template-columns: 1fr; }
+      .direction-tags { justify-content: flex-start; }
+      .direction-stage { grid-template-columns: 1fr; min-height: 0; padding: 32px 20px 40px; }
+      .concept-notes { max-width: 620px; margin: 0 auto; }
+    }
+    @media (max-width: 560px) {
+      .review { width: min(100% - 20px, 440px); padding-top: 36px; }
+      .review-header { padding-inline: 6px; }
+      .direction { border-radius: 18px; }
+      .direction-head { padding: 22px 20px; }
+      .direction-stage { padding-inline: 10px; }
+      .phone { border-width: 6px; border-radius: 34px; }
+      .note-grid { grid-template-columns: 1fr; }
+      .selection { grid-template-columns: 1fr; padding: 22px 20px; }
+      .selection-options { width: 100%; }
+      .selection-button { flex: 1; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .phone-state, .state-tab { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="review">
+    <header class="review-header">
+      <div>
+        <p class="review-kicker">The Lost Time Office · Interface reset</p>
+        <h1>Three new directions. Zero inherited styling.</h1>
+      </div>
+      <p class="review-intro">
+        这不是现有 UI 的微调，而是三套从零建立的系统。每套使用<strong>同一人物、同一文案、同一线索弹窗</strong>，并以英文用户为默认对象。点击手机上方的标签切换状态。
+      </p>
+    </header>
+
+    <div class="review-guide" aria-label="Review criteria">
+      <span class="guide-chip">Same content</span>
+      <span class="guide-chip">English-first</span>
+      <span class="guide-chip">390 × 844 target</span>
+      <span class="guide-chip">Main decision + clue detail</span>
+      <span class="guide-chip">No legacy file styling</span>
+    </div>
+
+    <section class="directions">
+      <article class="direction direction--a" id="direction-a">
+        <header class="direction-head">
+          <div>
+            <span class="direction-index">A</span>
+            <h2>International Editorial</h2>
+            <p class="direction-summary">像一本高质量叙事杂志：暖白底、克制黑线、橘红编辑标记。人物仍然占据绝对主体，文字使用有气质但不古旧的编辑排版。</p>
+          </div>
+          <div class="direction-tags" aria-label="Direction A traits">
+            <span>Humanist serif</span><span>Warm light UI</span><span>Editorial spacing</span><span>Quiet confidence</span>
+          </div>
+        </header>
+        <div class="direction-stage">
+          <div class="phone-wrap">
+            <div class="state-tabs" role="tablist" aria-label="Direction A states">
+              <button class="state-tab" type="button" role="tab" aria-selected="true" data-target="play">Decision screen</button>
+              <button class="state-tab" type="button" role="tab" aria-selected="false" data-target="detail">Clue detail</button>
+            </div>
+            <div class="phone" data-state="play">
+              <section class="phone-state phone-state--play a-screen a-play">
+                <header class="a-top">
+                  <div><small>Night desk · Visitor one</small><strong>The Lost Time Office</strong></div>
+                  <span class="a-progress">01 / 07 · 24s</span>
+                </header>
+                <div class="a-photo">
+                  <img src="../portraits/lin-mo.png" alt="Lin Mo" />
+                  <button class="clue-pin a-pin a-pin--1" type="button" aria-label="Clue one"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.3 15.3 5 5"/></svg><b>1</b></button>
+                  <button class="clue-pin a-pin a-pin--2" type="button" aria-label="Clue two"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.3 15.3 5 5"/></svg><b>2</b></button>
+                  <button class="clue-pin a-pin a-pin--3" type="button" aria-label="Clue three"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.3 15.3 5 5"/></svg><b>3</b></button>
+                  <div class="a-name"><small>TRAM CONDUCTOR · 1937</small><strong>Lin Mo</strong></div>
+                </div>
+                <footer class="a-bottom">
+                  <p class="a-quote">“I only walked through the tunnel. When I came out, everyone was staring at glowing glass.”</p>
+                  <div class="a-meta"><span>0 of 3 clues read</span><span>Choose his place in time</span></div>
+                  <div class="choice-row"><button class="choice a-choice" type="button">Send back</button><button class="choice a-choice a-choice--primary" type="button">Let stay</button></div>
+                </footer>
+              </section>
+              <section class="phone-state phone-state--detail a-screen a-detail">
+                <header class="a-detail-head"><div><small>CLUE 03 · CONSEQUENCE</small><h3>What happens next</h3></div><button class="proto-icon" type="button" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5 5 19"/></svg></button></header>
+                <div class="a-detail-art"><img src="../manual/lin-mo-echo.jpg" alt="A consequence of returning Lin Mo" /></div>
+                <div class="a-detail-stat"><strong>17 lives</strong><span>can be saved if he returns to the forty-third second after the blackout.</span></div>
+                <p class="a-detail-copy">He will open the crushed tram door. The city survives with one more memorial—and one fewer living witness.</p>
+                <button class="a-detail-button" type="button">Return to Lin Mo</button>
+              </section>
+            </div>
+          </div>
+          <div class="concept-notes">
+            <p class="concept-thesis">“A difficult human decision, presented with the calm authority of a great magazine.”</p>
+            <div class="note-grid">
+              <div class="note"><small>Type</small><p>Iowan Old Style / Avenir Next. Serif only for names, quotes and narrative emphasis.</p></div>
+              <div class="note"><small>Palette</small><p>Warm ivory, near-black, muted stone and one controlled editorial orange.</p></div>
+              <div class="note"><small>Signature</small><p>Full portrait behaves like a feature photograph; information sits outside it with generous breathing room.</p></div>
+              <div class="note"><small>Best for</small><p>Emotional, literary positioning and an international audience that values taste over spectacle.</p></div>
+            </div>
+            <p class="risk"><strong>Risk:</strong> if the serif is overused, it can feel like a reading app. The production version must keep the decision controls brisk and contemporary.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="direction direction--b" id="direction-b">
+        <header class="direction-head">
+          <div>
+            <span class="direction-index">B</span>
+            <h2>Night Cinema</h2>
+            <p class="direction-summary">把游戏当成一场近距离的深夜审讯：人物全屏，界面隐入画面，只留下倒计时、线索和两个决定。弹窗也不再像弹窗，而是一个短暂的叙事镜头。</p>
+          </div>
+          <div class="direction-tags" aria-label="Direction B traits">
+            <span>Full-bleed portrait</span><span>Dark UI</span><span>Modern sans</span><span>Immediate tension</span>
+          </div>
+        </header>
+        <div class="direction-stage">
+          <div class="phone-wrap">
+            <div class="state-tabs" role="tablist" aria-label="Direction B states">
+              <button class="state-tab" type="button" role="tab" aria-selected="true" data-target="play">Decision screen</button>
+              <button class="state-tab" type="button" role="tab" aria-selected="false" data-target="detail">Clue detail</button>
+            </div>
+            <div class="phone" data-state="play">
+              <section class="phone-state phone-state--play b-screen b-play">
+                <img src="../portraits/lin-mo.png" alt="Lin Mo" />
+                <header class="b-hud"><div class="b-hud-label"><span>VISITOR 01</span> · NIGHT SHIFT</div><div class="b-time">24</div></header>
+                <button class="clue-pin b-pin b-pin--1" type="button" aria-label="Clue one"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.3 15.3 5 5"/></svg><b>1</b></button>
+                <button class="clue-pin b-pin b-pin--2" type="button" aria-label="Clue two"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.3 15.3 5 5"/></svg><b>2</b></button>
+                <button class="clue-pin b-pin b-pin--3" type="button" aria-label="Clue three"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.3 15.3 5 5"/></svg><b>3</b></button>
+                <div class="b-content">
+                  <small>TRAM CONDUCTOR · 1937</small>
+                  <h3>Lin Mo</h3>
+                  <blockquote>“I only walked through the tunnel. When I came out, everyone was staring at glowing glass.”</blockquote>
+                  <div class="b-meta"><span>3 CLUES AVAILABLE</span><span>TIME IS RUNNING</span></div>
+                  <div class="choice-row"><button class="choice b-choice" type="button">Send back</button><button class="choice b-choice b-choice--primary" type="button">Let stay</button></div>
+                </div>
+              </section>
+              <section class="phone-state phone-state--detail b-screen b-detail">
+                <div class="b-detail-visual"><img src="../manual/lin-mo-echo.jpg" alt="A consequence of returning Lin Mo" /><button class="proto-icon b-close" type="button" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5 5 19"/></svg></button></div>
+                <div class="b-detail-copy">
+                  <small>CONSEQUENCE FOUND</small>
+                  <h3>He can save them.</h3>
+                  <div class="b-signal"><div class="b-signal-ring">17</div><p>Seventeen passengers survive if Lin Mo returns to the forty-third second after the blackout.</p></div>
+                  <p class="b-consequence">He does not. The city remembers an unnamed rescuer instead.</p>
+                  <button class="b-detail-button" type="button">Back to the decision</button>
+                </div>
+              </section>
+            </div>
+          </div>
+          <div class="concept-notes">
+            <p class="concept-thesis">“The visitor is the interface. Everything else appears only when the player needs it.”</p>
+            <div class="note-grid">
+              <div class="note"><small>Type</small><p>SF Pro / Helvetica Neue. Tight, contemporary and highly readable over imagery.</p></div>
+              <div class="note"><small>Palette</small><p>Midnight black-blue, white, cold signal cyan and one warm decision orange.</p></div>
+              <div class="note"><small>Signature</small><p>The character never loses the screen. Clues feel embedded in the encounter rather than arranged around it.</p></div>
+              <div class="note"><small>Best for</small><p>Maximum immediacy, emotional tension and the most intuitive “look, inspect, decide” loop.</p></div>
+            </div>
+            <p class="risk"><strong>Risk:</strong> contrast and portrait crops must be tuned per character. Weak source images would become more obvious in this direction.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="direction direction--c" id="direction-c">
+        <header class="direction-head">
+          <div>
+            <span class="direction-index">C</span>
+            <h2>Modern Civic System</h2>
+            <p class="direction-summary">不是旧官僚文件，而是一个有公共机构可信度的当代系统：极清楚的网格、硬边按钮、少量红蓝编码。所有元素都有功能，没有仿旧纹理。</p>
+          </div>
+          <div class="direction-tags" aria-label="Direction C traits">
+            <span>Swiss grid</span><span>Hard geometry</span><span>High clarity</span><span>Institutional confidence</span>
+          </div>
+        </header>
+        <div class="direction-stage">
+          <div class="phone-wrap">
+            <div class="state-tabs" role="tablist" aria-label="Direction C states">
+              <button class="state-tab" type="button" role="tab" aria-selected="true" data-target="play">Decision screen</button>
+              <button class="state-tab" type="button" role="tab" aria-selected="false" data-target="detail">Clue detail</button>
+            </div>
+            <div class="phone" data-state="play">
+              <section class="phone-state phone-state--play c-screen c-play">
+                <header class="c-top">
+                  <div class="c-case">01</div>
+                  <div class="c-title"><strong>THE LOST TIME OFFICE</strong><small>VISITOR REVIEW · 24 SEC</small></div>
+                  <button class="proto-icon c-menu" type="button" aria-label="Open menu"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+                </header>
+                <div class="c-portrait">
+                  <img src="../portraits/lin-mo.png" alt="Lin Mo" />
+                  <button class="clue-pin c-pin c-pin--1" type="button" aria-label="Clue one"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.3 15.3 5 5"/></svg><b>1</b></button>
+                  <button class="clue-pin c-pin c-pin--2" type="button" aria-label="Clue two"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.3 15.3 5 5"/></svg><b>2</b></button>
+                  <button class="clue-pin c-pin c-pin--3" type="button" aria-label="Clue three"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.3 15.3 5 5"/></svg><b>3</b></button>
+                  <div class="c-person-label"><strong>Lin Mo</strong><small>TRAM CONDUCTOR · 1937</small></div>
+                </div>
+                <footer class="c-bottom">
+                  <div class="c-quote"><p>“I only walked through the tunnel. When I came out, everyone was staring at glowing glass.”</p></div>
+                  <div class="c-checks"><span>CLUES READ 0 / 3</span><span>RULING REQUIRED</span></div>
+                  <div class="choice-row"><button class="choice c-choice" type="button">SEND BACK</button><button class="choice c-choice c-choice--primary" type="button">LET STAY</button></div>
+                </footer>
+              </section>
+              <section class="phone-state phone-state--detail c-screen c-detail">
+                <header class="c-detail-head"><div><small>CLUE 03 / CONSEQUENCE</small><strong>WHAT HAPPENS NEXT</strong></div><button class="proto-icon c-close" type="button" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5 5 19"/></svg></button></header>
+                <div class="c-detail-art"><img src="../manual/lin-mo-echo.jpg" alt="A consequence of returning Lin Mo" /></div>
+                <div class="c-fact-grid"><div class="c-fact"><small>RETURN POINT</small><strong>+43 sec</strong></div><div class="c-fact"><small>PASSENGERS</small><strong>17 saved</strong></div></div>
+                <p class="c-detail-copy">Lin Mo opens the crushed tram door. He dies during the rescue. The archive gains one unnamed hero.</p>
+                <button class="c-detail-button" type="button">BACK TO VISITOR</button>
+              </section>
+            </div>
+          </div>
+          <div class="concept-notes">
+            <p class="concept-thesis">“A public system that feels decisive and trustworthy—without pretending to be old.”</p>
+            <div class="note-grid">
+              <div class="note"><small>Type</small><p>Helvetica Neue / Arial. One family, strong weights, compact uppercase utility text.</p></div>
+              <div class="note"><small>Palette</small><p>Neutral white, structural black, civic blue and alert red. No texture, glow or decorative aging.</p></div>
+              <div class="note"><small>Signature</small><p>Hard grid, numbered case block and offset physical shadows create recognisable institutional energy.</p></div>
+              <div class="note"><small>Best for</small><p>Fast comprehension, functional confidence and a world that feels governed by a credible modern institution.</p></div>
+            </div>
+            <p class="risk"><strong>Risk:</strong> if the spacing loses discipline, it becomes ordinary dashboard design. It depends on exact alignment and restraint.</p>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="selection" aria-labelledby="selection-title">
+      <div>
+        <h2 id="selection-title">Which direction should become the next vertical slice?</h2>
+        <p>这里的选择只锁定视觉语言。选定后，我会再把开始页、判定反馈、时空图与结算页补成完整可玩的版本。</p>
+      </div>
+      <div class="selection-options" aria-label="Select a direction">
+        <button class="selection-button" type="button" aria-pressed="false" data-choice="A">A</button>
+        <button class="selection-button" type="button" aria-pressed="false" data-choice="B">B</button>
+        <button class="selection-button" type="button" aria-pressed="false" data-choice="C">C</button>
+      </div>
+      <div class="selection-result" aria-live="polite">No direction selected yet.</div>
+    </section>
+  </main>
+
+  <script>
+    document.querySelectorAll('.direction').forEach((direction) => {
+      const phone = direction.querySelector('.phone');
+      direction.querySelectorAll('.state-tab').forEach((tab) => {
+        tab.addEventListener('click', () => {
+          direction.querySelectorAll('.state-tab').forEach((item) => item.setAttribute('aria-selected', 'false'));
+          tab.setAttribute('aria-selected', 'true');
+          phone.dataset.state = tab.dataset.target;
+        });
+      });
+      direction.querySelectorAll('.clue-pin').forEach((pin) => {
+        pin.addEventListener('click', () => {
+          direction.querySelectorAll('.state-tab').forEach((item) => {
+            item.setAttribute('aria-selected', item.dataset.target === 'detail' ? 'true' : 'false');
+          });
+          phone.dataset.state = 'detail';
+        });
+      });
+      direction.querySelectorAll('[aria-label="Close"], [class$="detail-button"]').forEach((button) => {
+        button.addEventListener('click', () => {
+          direction.querySelectorAll('.state-tab').forEach((item) => {
+            item.setAttribute('aria-selected', item.dataset.target === 'play' ? 'true' : 'false');
+          });
+          phone.dataset.state = 'play';
+        });
+      });
+    });
+
+    const result = document.querySelector('.selection-result');
+    document.querySelectorAll('.selection-button').forEach((button) => {
+      button.addEventListener('click', () => {
+        document.querySelectorAll('.selection-button').forEach((item) => item.setAttribute('aria-pressed', 'false'));
+        button.setAttribute('aria-pressed', 'true');
+        const labels = {
+          A: 'A selected — International Editorial',
+          B: 'B selected — Night Cinema',
+          C: 'C selected — Modern Civic System'
+        };
+        result.textContent = labels[button.dataset.choice];
+        document.querySelector(`#direction-${button.dataset.choice.toLowerCase()}`).scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+  </script>
+</body>
+</html>
