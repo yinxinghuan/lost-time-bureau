@@ -728,6 +728,92 @@ img { display: block; }
 .ltb-pause__panel > button:not(.ltb-primary) { width: 100%; min-height: 48px; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; border: 2px solid @ink; background: transparent; color: @ink; font-weight: 800; }
 .ltb-pause__panel svg { width: 20px; height: 20px; }
 
+/* C vertical-slice geometry: screen-specific rows, never a generic flexible sheet. */
+.ltb-sheet--clue {
+  grid-template-rows: 100px minmax(198px, 31%) auto minmax(0, 1fr) auto;
+  gap: 12px;
+}
+
+.ltb-sheet--clue .ltb-sheet__top {
+  min-height: 100px;
+  align-items: stretch;
+}
+
+.ltb-sheet--clue .ltb-sheet__top > div { min-width: 0; display: grid; align-content: center; gap: 6px; }
+.ltb-sheet--clue .ltb-sheet__top h2 { margin: 0; font-size: clamp(27px, 8vw, 34px); line-height: .98; letter-spacing: -.045em; }
+.ltb-sheet--clue .ltb-sheet__top button { height: 100%; }
+.ltb-sheet--clue .ltb-clue-visual { padding: 0; }
+.ltb-sheet--clue .ltb-clue-visual > strong { display: none; }
+.ltb-sheet--clue .ltb-clue-visual.has-plate::after { display: none; }
+
+.ltb-clue-facts {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  border: 2px solid @ink;
+}
+
+.ltb-clue-facts > div { min-width: 0; min-height: 82px; padding: 10px; }
+.ltb-clue-facts > div + div { border-left: 1px solid @ink; }
+.ltb-clue-facts small { display: block; overflow: hidden; color: @muted; font-size: 9px; font-weight: 850; letter-spacing: .1em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+.ltb-clue-facts strong { display: block; margin-top: 8px; font-size: clamp(16px, 5.2vw, 21px); line-height: 1.08; letter-spacing: -.02em; overflow-wrap: anywhere; }
+
+.ltb-sheet--clue .ltb-sheet__detail {
+  align-self: center;
+  max-height: none;
+  margin: 0;
+  overflow: auto;
+  background: transparent;
+  font-size: 16px;
+  line-height: 1.46;
+}
+
+/* Initial verdict matches the approved slice; detailed explanation remains one deliberate step deeper. */
+.ltb-reveal { grid-template-rows: 116px minmax(0, 1fr) auto auto; gap: 12px; }
+.ltb-verdict-banner { display: grid; grid-template-columns: 78px minmax(0, 1fr); border: 2px solid @ink; color: #fff; }
+.ltb-reveal.is-right .ltb-verdict-banner { background: @green; }
+.ltb-reveal.is-wrong .ltb-verdict-banner { background: @red; }
+.ltb-verdict-banner > div { display: grid; place-items: center; border-right: 2px solid @ink; }
+.ltb-verdict-banner svg { width: 36px; height: 36px; stroke-width: 2.6; }
+.ltb-verdict-banner > span { min-width: 0; display: grid; align-content: center; padding: 0 14px; }
+.ltb-verdict-banner small { font-size: 9px; font-weight: 850; letter-spacing: .12em; }
+.ltb-verdict-banner strong { margin-top: 6px; font-size: clamp(27px, 8vw, 34px); line-height: .9; letter-spacing: -.045em; }
+.ltb-reveal__scene { margin: 0; }
+.ltb-verdict-reason { position: absolute; z-index: 6; right: 13px; bottom: 12px; left: 13px; color: #fff; font-size: 16px; font-weight: 800; line-height: 1.3; }
+.ltb-reveal__scene::after { content: ""; position: absolute; z-index: 4; right: 0; bottom: 0; left: 0; height: 46%; background: linear-gradient(transparent, fade(@ink, 88%)); pointer-events: none; }
+.ltb-reveal > .ltb-compare { grid-column: auto; margin: 0; }
+.ltb-reveal > .ltb-compare > div { min-height: 70px; }
+.ltb-reveal__next { width: 100%; min-height: 54px; border: 2px solid @ink; background: @blue; box-shadow: 4px 4px 0 @ink; color: #fff; font-size: 16px; font-weight: 850; }
+.ltb-reveal__next:active { transform: translate(3px, 3px); box-shadow: 1px 1px 0 @ink; }
+.ltb-reveal.is-report { display: block; padding: 0; }
+.ltb-reveal.is-report .ltb-report { position: relative; }
+.ltb-report--compare { grid-template-rows: auto auto auto auto; align-content: start; }
+.ltb-report--compare .ltb-report__reason { min-height: 0; max-height: none; display: flex; align-items: center; }
+
+/* Approved central route composition: the timeline is the subject, cards stay secondary. */
+.ltb-map-anchor__seal { font-size: 15px; font-weight: 900; letter-spacing: -.03em; }
+.ltb-map-route { padding: 4px 0; }
+.ltb-map-route::before { left: 50%; transform: translateX(-50%); }
+.ltb-map-node { min-height: 13.8%; grid-template-columns: minmax(0, 1fr) 34px minmax(0, 1fr); }
+.ltb-map-node::after { left: calc(50% - 1px); }
+.ltb-map-node__card { min-width: 0; max-width: 132px; display: block; padding: 7px 8px; border: 2px solid @ink; }
+.ltb-map-node:nth-child(odd) .ltb-map-node__card { grid-column: 1; justify-self: end; margin-right: 9px; }
+.ltb-map-node:nth-child(even) .ltb-map-node__card { grid-column: 3; justify-self: start; margin-left: 9px; }
+.ltb-map-node__card .ltb-mini-portrait { display: none; }
+.ltb-map-node__card strong { font-size: 10px; }
+.ltb-map-node__card small { font-size: 8px; }
+.ltb-map-node__pin { grid-column: 2; }
+
+/* Result uses the same top score / centered meaning / bottom action rhythm as the slice. */
+.ltb-result { grid-template-rows: auto auto minmax(0, 1fr) auto; align-items: stretch; gap: 0; padding: max(36px, env(safe-area-inset-top)) 18px max(18px, env(safe-area-inset-bottom)); text-align: left; }
+.ltb-result__kicker { align-self: start; padding-bottom: 12px; border-bottom: 2px solid @ink; color: @blue; font-size: 10px; font-weight: 900; letter-spacing: .13em; text-transform: uppercase; }
+.ltb-result__score { display: flex; align-items: baseline; gap: 10px; padding: 10px 0 18px; border-bottom: 2px solid @ink; }
+.ltb-result__score strong { font-size: clamp(76px, 26vw, 104px); line-height: .85; letter-spacing: -.07em; }
+.ltb-result__score span { color: @muted; font-size: 30px; font-weight: 750; }
+.ltb-result__body { align-self: center; }
+.ltb-result__body h2 { max-width: 320px; margin: 0; color: @ink; font-size: clamp(25px, 7.5vw, 32px); line-height: 1; letter-spacing: -.04em; }
+.ltb-result__body p { margin: 14px 0 20px; color: @muted; font-size: 16px; font-weight: 600; line-height: 1.45; }
+.ltb-result__scores { margin: 0; }
+
 @keyframes ltb-load { from { transform: translateX(0); } to { transform: translateX(120%); } }
 @keyframes ltb-page-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes ltb-banner-in { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
@@ -757,8 +843,16 @@ img { display: block; }
   .ltb-clue-visual > strong { font-size: 14px; }
   .ltb-sheet__detail { max-height: 22dvh; padding: 8px 10px; font-size: 12px; line-height: 1.35; }
   .ltb-sheet__actions button, .ltb-sheet__done { min-height: 46px; }
+  .ltb-sheet--clue { grid-template-rows: 60px minmax(145px, 29%) auto minmax(0, 1fr) auto; }
+  .ltb-sheet--clue .ltb-sheet__top { min-height: 60px; }
+  .ltb-sheet--clue .ltb-sheet__top h2 { font-size: 20px; }
+  .ltb-clue-facts > div { min-height: 64px; padding: 8px; }
+  .ltb-clue-facts strong { margin-top: 5px; font-size: 15px; }
+  .ltb-sheet--clue .ltb-sheet__detail { font-size: 13px; line-height: 1.35; }
 
-  .ltb-reveal { gap: 8px; padding-top: max(7px, env(safe-area-inset-top)); padding-bottom: max(9px, env(safe-area-inset-bottom)); }
+  .ltb-reveal { grid-template-rows: 92px minmax(0, 1fr) auto auto; gap: 8px; padding-top: max(7px, env(safe-area-inset-top)); padding-bottom: max(9px, env(safe-area-inset-bottom)); }
+  .ltb-verdict-banner { grid-template-columns: 64px minmax(0, 1fr); }
+  .ltb-verdict-banner strong { font-size: 24px; }
   .ltb-stamp { min-height: 58px; padding: 8px 12px; }
   .ltb-stamp svg { width: 28px; height: 28px; }
   .ltb-reveal__bar p { margin-bottom: 7px; font-size: 12px; }
@@ -781,9 +875,10 @@ img { display: block; }
   .ltb-map-node__card .ltb-mini-portrait { width: 36px; height: 36px; }
   .ltb-map-node__card { grid-template-columns: 36px minmax(0, 1fr); }
 
-  .ltb-result { gap: 7px; padding-top: max(15px, env(safe-area-inset-top)); padding-bottom: max(10px, env(safe-area-inset-bottom)); }
-  .ltb-result h2 { font-size: 82px; }
-  .ltb-result > p { font-size: 13px; line-height: 1.35; }
+  .ltb-result { gap: 0; padding-top: max(15px, env(safe-area-inset-top)); padding-bottom: max(10px, env(safe-area-inset-bottom)); }
+  .ltb-result__score strong { font-size: 72px; }
+  .ltb-result__body h2 { font-size: 26px; }
+  .ltb-result__body p { margin-block: 9px 12px; font-size: 14px; }
 }
 
 @media (min-height: 900px) {

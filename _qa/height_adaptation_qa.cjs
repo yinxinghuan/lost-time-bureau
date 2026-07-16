@@ -55,7 +55,7 @@ async function run(browser, viewport) {
   await page.getByRole('button', { name: 'CLUE 3' }).click()
   await page.waitForTimeout(160)
   results.push(await geometry(page, 'clue', viewport))
-  await page.getByRole('button', { name: 'DONE' }).click()
+  await page.getByRole('button', { name: 'BACK TO VISITOR' }).click()
 
   await page.getByRole('button', { name: 'Open the live time map' }).click()
   await page.waitForTimeout(160)

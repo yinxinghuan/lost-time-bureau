@@ -14,8 +14,13 @@ const cluePositions: Record<EvidenceId, { left: string; top: string }> = {
 }
 
 const clueTitles = {
-  zh: { object: '随身物品', memory: '他说的过去', echo: '会发生什么' },
-  en: { object: 'WHAT THEY CARRY', memory: 'THEIR PAST', echo: 'WHAT MAY HAPPEN' },
+  zh: { object: '随身物品', memory: '他们记得什么', echo: '会发生什么' },
+  en: { object: 'WHAT THEY CARRY', memory: 'WHAT THEY REMEMBER', echo: 'WHAT HAPPENS NEXT' },
+} as const
+
+const clueKinds = {
+  zh: { object: '物证核验', memory: '记忆核验', echo: '后果推演' },
+  en: { object: 'MATERIAL', memory: 'MEMORY', echo: 'CONSEQUENCE' },
 } as const
 
 function PortraitImage({ file, name }: { file: string; name: string }) {
@@ -85,7 +90,6 @@ function MiniPortrait({ file, name }: { file: string; name: string }) {
 export default function LostTimeBureau() {
   const [locale, setLocale] = useState<Locale>(() => detectLocale())
   const [muted, setMuted] = useState(() => sounds.isMuted())
-  const [clueExpanded, setClueExpanded] = useState(false)
   const [revealStep, setRevealStep] = useState<0 | 1 | 2>(0)
   const [showStatus, setShowStatus] = useState(false)
   const [showWorldMap, setShowWorldMap] = useState(false)
@@ -114,10 +118,8 @@ export default function LostTimeBureau() {
     sounds.outcome(game.lastSuccess)
   }, [game.caseIndex, game.lastSuccess, game.phase, game.verdict])
 
-  useEffect(() => setClueExpanded(false), [game.selected?.id])
-
   const beginShift = () => { setShowStatus(false); setShowWorldMap(false); sounds.start(); game.start() }
-  const openEvidence = (id: EvidenceId) => { setClueExpanded(false); sounds.instrument(); game.openEvidence(id) }
+  const openEvidence = (id: EvidenceId) => { sounds.instrument(); game.openEvidence(id) }
   const closeEvidence = () => { sounds.drawerClose(); game.closeEvidence() }
   const submitVerdict = (choice: 'stay' | 'return') => { sounds.verdict(choice); game.submitVerdict(choice) }
   const nextVisitor = () => { sounds.archive(); game.archive() }
@@ -151,6 +153,17 @@ export default function LostTimeBureau() {
       : Math.abs(game.stability - game.humanity) <= 18
         ? t('ending.balance')
         : game.stability > game.humanity ? t('ending.order') : t('ending.mercy')
+  const clueFacts = game.selected
+    ? game.selected.id === 'echo'
+      ? [
+          { label: locale === 'zh' ? '送回原线' : 'RETURN LINE', value: local(game.currentCase.verdicts.return.timelinePast) },
+          { label: locale === 'zh' ? '留在现世' : 'PRESENT LINE', value: local(game.currentCase.verdicts.stay.timelineFuture) },
+        ]
+      : [
+          { label: local(game.selected.label), value: local(game.selected.value) },
+          { label: locale === 'zh' ? '来客' : 'VISITOR', value: local(game.currentCase.name) },
+        ]
+    : []
 
   return (
     <main className={`ltb ltb--${game.phase}${locale === 'en' ? ' ltb--en' : ''}`} lang={locale === 'zh' ? 'zh-CN' : 'en'}>
@@ -230,40 +243,40 @@ export default function LostTimeBureau() {
 
       {game.phase === 'case' && game.selected && (
         <div className="ltb-sheet-wrap" role="presentation" onClick={closeEvidence}>
-          <article className={`ltb-sheet${clueExpanded ? ' is-expanded' : ''}`} role="dialog" aria-modal="true" aria-labelledby="clue-title" onClick={(event) => event.stopPropagation()}>
+          <article className="ltb-sheet ltb-sheet--clue" role="dialog" aria-modal="true" aria-labelledby="clue-title" onClick={(event) => event.stopPropagation()}>
             <div className="ltb-sheet__top">
-              <span>{t('clue')} {selectedIndex + 1} / 3</span>
+              <div><span>{t('clue')} {String(selectedIndex + 1).padStart(2, '0')} / {clueKinds[locale][game.selected.id]}</span><h2 id="clue-title">{clueTitles[locale][game.selected.id]}</h2></div>
               <button type="button" onClick={closeEvidence} aria-label={t('close')}><LineIcon name="close" /></button>
             </div>
-            <h2 id="clue-title">{clueTitles[locale][game.selected.id]}</h2>
             <ClueVisual key={`${game.currentCase.id}-${game.selected.id}`} caseId={game.currentCase.id} id={game.selected.id} value={local(game.selected.value)} locale={locale} />
-            {clueExpanded && <p className="ltb-sheet__detail">{local(game.selected.detail)}</p>}
-            <small><LineIcon name="pause" /> {t('timePaused')}</small>
-            {!clueExpanded ? (
-              <div className="ltb-sheet__actions">
-                <button type="button" onClick={closeEvidence}>{t('clueDone')}</button>
-                <button className="is-primary" type="button" onClick={() => setClueExpanded(true)}>{t('expandDetail')}</button>
-              </div>
-            ) : (
-              <button className="ltb-sheet__done" type="button" onClick={closeEvidence}>{t('clueDone')}</button>
-            )}
+            <div className="ltb-clue-facts">
+              {clueFacts.map((fact) => <div key={fact.label}><small>{fact.label}</small><strong>{fact.value}</strong></div>)}
+            </div>
+            <p className="ltb-sheet__detail">{local(game.selected.detail)}</p>
+            <button className="ltb-sheet__done" type="button" onClick={closeEvidence}>{t('backToVisitor')}</button>
           </article>
         </div>
       )}
 
       {game.phase === 'reveal' && game.verdict && game.result && (
         <section className={`ltb-reveal ${game.lastSuccess ? 'is-right' : 'is-wrong'}${revealStep > 0 ? ' is-report' : ''}`}>
-          <div className="ltb-reveal__scene">
-            <PortraitImage file={game.currentCase.portrait} name={local(game.currentCase.name)} />
-            <div className="ltb-reveal__choice">{t('youChose')} {game.verdict === 'stay' ? t('staySimple') : t('returnSimple')}</div>
-            <div className="ltb-stamp"><LineIcon name={game.lastSuccess ? 'check' : 'cross'} /><strong>{game.lastSuccess ? t('right') : t('wrong')}</strong></div>
-          </div>
-
           {revealStep === 0 ? (
-            <div className="ltb-reveal__bar">
-              <p>{game.lastSuccess ? t('rightHint') : t('wrongHint')}</p>
-              <button type="button" onClick={() => setRevealStep(1)}>{t('why')}</button>
-            </div>
+            <>
+              <header className="ltb-verdict-banner">
+                <div><LineIcon name={game.lastSuccess ? 'check' : 'cross'} /></div>
+                <span><small>{game.lastSuccess ? t('verdictConfirmed') : t('verdictConflict')}</small><strong>{game.lastSuccess ? t('verdictCorrect') : t('verdictIncorrect')}</strong></span>
+              </header>
+              <div className="ltb-reveal__scene">
+                <PortraitImage file={game.currentCase.portrait} name={local(game.currentCase.name)} />
+                <div className="ltb-verdict-reason">{reason}</div>
+              </div>
+              <div className="ltb-compare">
+                <div><span>{t('yourChoice')}</span><strong>{game.verdict === 'stay' ? t('staySimple') : t('returnSimple')}</strong></div>
+                <i className={game.lastSuccess ? 'is-match' : 'is-miss'}><LineIcon name={game.lastSuccess ? 'check' : 'cross'} /></i>
+                <div><span>{t('cluePoints')}</span><strong>{answer === 'stay' ? t('staySimple') : t('returnSimple')}</strong></div>
+              </div>
+              <button className="ltb-reveal__next" type="button" onClick={() => setRevealStep(1)}>{t('why')}</button>
+            </>
           ) : revealStep === 1 ? (
             <article className="ltb-report ltb-report--compare">
               <header><span>{t('whyTitle')}</span><strong>{game.lastSuccess ? t('sameChoice') : t('differentChoice')}</strong></header>
@@ -323,7 +336,7 @@ export default function LostTimeBureau() {
             <h2 id="map-title">{t('map.title')}</h2>
             <p className="ltb-map-sheet__intro">{t('map.subtitle')}</p>
             <div className="ltb-map-anchor">
-              <div className="ltb-map-anchor__seal"><LineIcon name="map" /><i /><i /></div>
+              <div className="ltb-map-anchor__seal">2049</div>
               <strong>{t('map.cityNow')}</strong>
               <div className="ltb-map-currents">
                 <span><small>{t('map.historyFlow')}</small><b>{statusWord(game.stability)}</b><i><em style={{ width: `${game.stability}%` }} /></i></span>
@@ -355,11 +368,13 @@ export default function LostTimeBureau() {
 
       {game.phase === 'result' && (
         <section className="ltb-result">
-          <span>{t('daybreak')}</span>
-          <h2>{game.correctCount}<small> / {game.totalCases}</small></h2>
-          <strong>{t('rightCount')}</strong>
-          <p>{ending}</p>
-          <div className="ltb-result__scores"><span>{t('score')} <b>{game.totalScore}</b></span><span>{t('best')} <b>{Math.max(game.bestScore, game.totalScore)}</b></span></div>
+          <span className="ltb-result__kicker">{t('daybreak')}</span>
+          <div className="ltb-result__score"><strong>{game.correctCount}</strong><span>/ {game.totalCases}</span></div>
+          <div className="ltb-result__body">
+            <h2>{ending}</h2>
+            <p>{t('rightCount')}</p>
+            <div className="ltb-result__scores"><span>{t('score')} <b>{game.totalScore}</b></span><span>{t('best')} <b>{Math.max(game.bestScore, game.totalScore)}</b></span></div>
+          </div>
           <button className="ltb-primary" type="button" onPointerDown={beginShift}>{t('again')}</button>
         </section>
       )}

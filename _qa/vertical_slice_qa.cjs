@@ -59,11 +59,7 @@ async function runViewport(browser, viewport, suffix) {
   await page.waitForTimeout(260)
   await page.screenshot({ path: path.join(out, `03-evidence-${suffix}.png`), fullPage: true })
   const evidenceAudit = await audit(page, `evidence-${suffix}`)
-  await page.getByRole('button', { name: /展开细节|OPEN DETAILS/ }).click()
-  await page.waitForTimeout(180)
-  await page.screenshot({ path: path.join(out, `03b-evidence-detail-${suffix}.png`), fullPage: true })
-  const detailAudit = await audit(page, `evidence-detail-${suffix}`)
-  await page.getByRole('button', { name: /看完了|DONE/ }).click()
+  await page.getByRole('button', { name: /回到来客|BACK TO VISITOR/ }).click()
 
   await page.getByRole('button', { name: /送回|SEND BACK/ }).click()
   await page.waitForTimeout(350)
@@ -93,7 +89,7 @@ async function runViewport(browser, viewport, suffix) {
   await page.getByRole('button', { name: /送回|SEND BACK/ }).click()
   await page.waitForTimeout(300)
   await page.screenshot({ path: path.join(out, `04c-failure-reveal-${suffix}.png`), fullPage: true })
-  const failureVisible = await page.getByText(/判错了|NOT QUITE/).isVisible()
+  const failureVisible = await page.getByText(/错误|INCORRECT/).isVisible()
   await page.getByRole('button', { name: /看看为什么|SEE WHY/ }).click()
   await page.getByRole('button', { name: /看看后来|SEE WHAT HAPPENED/ }).click()
   await page.getByRole('button', { name: /下一位|NEXT VISITOR/ }).click()
@@ -126,7 +122,7 @@ async function runViewport(browser, viewport, suffix) {
   const resultAudit = await audit(page, `result-${suffix}`)
 
   await page.close()
-  return { suffix, errors, stillReveal, compareVisible, reportVisible, failureVisible, mapInitialVisible, mapLiveVisible, audits: [startAudit, caseAudit, statusAudit, mapInitialAudit, mapLiveAudit, pauseAudit, evidenceAudit, detailAudit, revealAudit, echoAudit, resultAudit] }
+  return { suffix, errors, stillReveal, compareVisible, reportVisible, failureVisible, mapInitialVisible, mapLiveVisible, audits: [startAudit, caseAudit, statusAudit, mapInitialAudit, mapLiveAudit, pauseAudit, evidenceAudit, revealAudit, echoAudit, resultAudit] }
 }
 
 async function runEnglishMap(browser) {

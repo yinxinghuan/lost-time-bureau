@@ -43,10 +43,10 @@ lost-time-bureau/
 - `LostTimeBureau.tsx` 保持人物优先的交互结构：顶部当前人物/进度/倒计时入口，中部人物和 3 个线索热点，底部对白与两个裁定按钮。
 - 开始页在海报上叠加 DOM 系统栏、案件色块和当晚来客信息；海报资源本身只包含英文标题。下半部使用游戏名、简短说明、三步玩法和唯一开始按钮。
 - `LostTimeBureau.less` 以 `#101820` 结构黑、`#F1F2EF` 系统白、`#2E61D5` 公共蓝、`#F14D32` 警示红和 `#16856F` 成功绿构成统一硬网格；全界面只使用现代无衬线字体。
-- 根容器固定为 `height: 100dvh` 且 `min-height: 0`。开始、判断、线索、揭晓、地图与结果页使用 `grid-template-rows` 和 `minmax(0, 1fr)` 分配剩余高度；`max-height: 700px` 时压缩标题、间距、按钮和插画，`min-height: 900px` 时把额外高度优先分配给人物与海报。
+- 根容器固定为 `height: 100dvh` 且 `min-height: 0`。开始、判断、线索、揭晓、地图与结果页各自拥有独立的 `grid-template-rows`，而非复用一个通用弹窗比例；`minmax(0, 1fr)` 只分配给人物、说明或路线等指定伸缩区。`max-height: 700px` 时压缩标题、间距、按钮和插画，`min-height: 900px` 时把额外高度优先分配给人物与海报。
 - 页面级滚动被关闭。地图节点和展开后的长说明分别在 `.ltb-map-route` 与 `.ltb-sheet__detail` 内部滚动；底部主操作始终留在视口内。顶部、底部间距使用 `env(safe-area-inset-*)`。
 - `PortraitImage` 以案件 ID 重新挂载；当前与下一张人物图预载。新图在 `load/error` 或 1.2 秒保险任一路解除遮罩，失败时显示姓名首字占位。
-- `ClueVisual` 优先展示 `public/manual/<case>-<evidence>.jpg`，加载前或失败时保留日期环、记忆轨迹和去留分叉 SVG 图示。线索页以整屏模式显示图片、读数、可选细节和返回操作。
+- `ClueVisual` 优先展示 `public/manual/<case>-<evidence>.jpg`，加载前或失败时保留日期环、记忆轨迹和去留分叉 SVG 图示。线索页以整屏模式固定显示标题、图片、双事实格、说明和返回操作；因果回声用送回/留在现世两条时间线填充事实格。
 - `resolveProtocol()` 计算判断对错与决定性理由；`resolveVerdict()` 计算叙事后果和两项城市状态。第 4 案读取第 2 案的 `future_map` 改变答案与后果。
 - 揭晓使用本地 `revealStep` 分三层：绿/红结果横幅；“你的选择 / 线索指向”对照；后果插画与原来/后来时间线。每层都由玩家主动推进。
 - 状态页读取当前人物、`stability` 与 `humanity`；时空图读取 `history`、`caseIndex` 和两项城市状态，7 个节点实时显示已留下、已送回、当前或尚未抵达。
