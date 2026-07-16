@@ -5,6 +5,12 @@
 @gold: #d49a38;
 @cyan: #70d2c8;
 @red: #e15d50;
+@desk: #171b1c;
+@file: #ece8dc;
+@fileShadow: #d8d0bf;
+@rule: #9c5b53;
+@blueInk: #314f78;
+@redInk: #a9443a;
 
 * { box-sizing: border-box; }
 html, body, #root { width: 100%; min-height: 100%; margin: 0; }
@@ -257,6 +263,128 @@ button { font: inherit; -webkit-tap-highlight-color: transparent; user-select: n
 @keyframes ltb-stamp-in { from { opacity: 0; scale: 1.18; } to { opacity: 1; scale: 1; } }
 @keyframes ltb-detail-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
 
+/* Bureau file reskin */
+body { background: #111415; }
+.ltb { background: @desk; }
+.ltb button:focus-visible { outline-color: @blueInk; }
+.ltb-primary { border: 1px solid @blueInk; background: @blueInk; box-shadow: 0 4px 0 #162a45; color: @file; font-family: "Courier New", "Noto Serif SC", monospace; letter-spacing: .03em; }
+.ltb-primary:active { box-shadow: 0 1px 0 #162a45; }
+
+.ltb-start { background: @desk; }
+.ltb-start__hero { margin: 10px 10px 0; border: 7px solid @file; outline: 1px solid @rule; background: #102a36; }
+.ltb-start__shade { background: linear-gradient(180deg, transparent 72%, fade(@desk, 72%) 100%); }
+.ltb-lang { border-color: @rule; background: fade(@file, 94%); color: @blueInk; }
+.ltb-start__panel { position: relative; margin: 0 10px 10px; padding-left: 43px; border: 1px solid @rule; border-top: 0; background-color: @file; background-image: linear-gradient(90deg, transparent 27px, fade(@rule, 64%) 27px 28px, transparent 28px), repeating-linear-gradient(0deg, fade(#fff, 20%) 0 2px, transparent 2px 5px); color: @ink; }
+.ltb-start__panel::before { content: ''; position: absolute; left: 7px; top: 32px; width: 10px; height: 10px; border-radius: 50%; background: @desk; box-shadow: 0 88px @desk, 0 176px @desk; }
+.ltb-start__panel > span { color: @blueInk; font-family: "Courier New", monospace; }
+.ltb-start__panel h1 { color: @ink; font-family: "Times New Roman", "Noto Serif SC", serif; letter-spacing: -.02em; }
+.ltb-start__panel p { color: fade(@ink, 72%); font-family: "Courier New", "Noto Serif SC", serif; }
+.ltb-start__panel small { color: fade(@blueInk, 72%); }
+
+.ltb-play { background: @desk; }
+.ltb-hud { border: 1px solid @rule; background-color: @file; background-image: linear-gradient(90deg, transparent 42px, fade(@rule, 42%) 42px 43px, transparent 43px), repeating-linear-gradient(0deg, fade(#fff, 20%) 0 2px, transparent 2px 5px); box-shadow: 0 2px 0 #0d1011; }
+.ltb-hud__status { color: @ink; }
+.ltb-hud__status:active, .ltb-hud__map:active { background: fade(@blueInk, 8%); }
+.ltb-hud__status > svg { color: @blueInk; }
+.ltb-hud__case strong { color: @ink; }
+.ltb-hud__case strong i { color: fade(@blueInk, 56%); }
+.ltb-hud__case small { color: @blueInk; }
+.ltb-mini-portrait { border-color: @blueInk; background: @fileShadow; color: @blueInk; }
+.ltb-time { color: @blueInk; }
+.ltb-time b { color: @ink; }
+.ltb-time.is-low, .ltb-time.is-low b { color: @redInk; }
+.ltb-hud__map { color: @blueInk; border-left: 1px solid fade(@rule, 46%); }
+.ltb-hud__map small { color: @blueInk; }
+.ltb-icon-button { color: @ink; border-left: 1px solid fade(@rule, 46%); }
+
+.ltb-stage { margin: 7px 5px 0; overflow: visible; border: 5px solid @file; outline: 1px solid @rule; background: #102a36; box-shadow: 3px 4px 0 fade(#000, 34%); }
+.ltb-stage::before { content: attr(data-file); position: absolute; z-index: 7; top: -5px; left: 8px; padding: 3px 7px 4px; border-inline: 1px solid @rule; background: @file; color: @blueInk; font: 700 8px/1 "Courier New", monospace; letter-spacing: .12em; }
+.ltb-stage::after { inset: 0; }
+.ltb-stage__name { bottom: -1px; left: 9px; padding: 8px 12px 7px; border: 1px solid @rule; border-bottom: 0; background: @file; color: @ink; }
+.ltb-stage__name strong { font-family: "Times New Roman", "Noto Serif SC", serif; }
+.ltb-clue { border-color: @blueInk; background: fade(@file, 94%); box-shadow: 2px 3px 0 fade(#000, 48%); color: @blueInk; }
+.ltb-clue span { background: @blueInk; color: @file; }
+.ltb-clue.is-seen { border-color: #2f746c; background: @file; color: #2f746c; }
+.ltb-clue.is-seen span { border-color: #2f746c; background: #2f746c; color: @file; }
+
+.ltb-dialogue { position: relative; min-height: 78px; max-height: 92px; margin: 8px 0 0; padding: 25px 13px 9px 31px; border: 1px solid @rule; border-left-width: 1px; background-color: @file; background-image: linear-gradient(90deg, transparent 19px, fade(@rule, 58%) 19px 20px, transparent 20px), repeating-linear-gradient(0deg, transparent 0 23px, fade(@blueInk, 9%) 23px 24px); color: @ink; font: 600 16px/1.45 "Courier New", "Noto Serif SC", serif; }
+.ltb-dialogue::before { content: attr(data-label); position: absolute; left: 30px; top: 7px; color: @blueInk; font: 700 8px/1 "Courier New", monospace; letter-spacing: .12em; }
+.ltb-dialogue::after { content: ''; position: absolute; right: 16px; top: 13px; width: 42px; height: 8px; border-top: 2px solid fade(@blueInk, 55%); border-bottom: 1px solid fade(@blueInk, 36%); transform: rotate(-5deg); }
+.ltb-actions { position: relative; padding-top: 19px; }
+.ltb-actions::before { content: attr(data-label); position: absolute; top: 5px; left: 2px; color: fade(@file, 58%); font: 700 8px/1 "Courier New", monospace; letter-spacing: .12em; }
+.ltb-actions > p { color: fade(@file, 64%); font-family: "Courier New", monospace; }
+.ltb-choice { min-height: 58px; border: 1px solid @rule; background: @file; box-shadow: 0 4px 0 #0d1011; color: @ink; font-family: "Courier New", "Noto Serif SC", monospace; letter-spacing: .08em; }
+.ltb-choice--stay { border-top: 5px solid #2f746c; color: #205b55; }
+.ltb-choice--return { border-top: 5px solid @redInk; color: #873830; }
+
+.ltb-sheet-wrap { background: fade(@desk, 72%); }
+.ltb-sheet, .ltb-status-sheet, .ltb-map-sheet, .ltb-report, .ltb-pause__panel { position: relative; padding-left: 30px; border-top: 1px solid @rule; background-color: @file; background-image: linear-gradient(90deg, transparent 20px, fade(@rule, 58%) 20px 21px, transparent 21px), repeating-linear-gradient(0deg, fade(#fff, 18%) 0 2px, transparent 2px 5px); color: @ink; }
+.ltb-sheet::before, .ltb-status-sheet::before, .ltb-map-sheet::before, .ltb-report::before, .ltb-pause__panel::before { content: ''; position: absolute; z-index: 3; left: 5px; top: 72px; width: 9px; height: 9px; border-radius: 50%; background: @desk; box-shadow: 0 120px @desk, 0 240px @desk; }
+.ltb-sheet__top { color: @blueInk; font-family: "Courier New", monospace; }
+.ltb-sheet__top button { border-color: @rule; background: fade(#fff, 18%); color: @ink; }
+.ltb-sheet h2, .ltb-status-sheet h2, .ltb-map-sheet h2 { font-family: "Times New Roman", "Noto Serif SC", serif; letter-spacing: -.02em; }
+.ltb-clue-visual { border-color: @rule; background: @fileShadow; }
+.ltb-clue-visual > strong { color: @blueInk; }
+.ltb-clue-visual.has-plate > strong { background: fade(@file, 92%); box-shadow: 0 0 0 1px fade(@rule, 55%); }
+.ltb-sheet__detail { position: relative; border-left-color: @blueInk; background: fade(@blueInk, 6%); color: @blueInk; font-family: "Kaiti SC", "STKaiti", "Noto Serif SC", serif; transform: rotate(-.35deg); }
+.ltb-sheet__detail::after { content: ''; position: absolute; right: 12px; top: 10px; width: 38px; height: 10px; border-top: 2px solid fade(@blueInk, 42%); border-bottom: 1px solid fade(@blueInk, 28%); transform: rotate(-6deg); }
+.ltb-sheet__done, .ltb-sheet__actions button { border: 1px solid @blueInk; background: transparent; color: @blueInk; font-family: "Courier New", "Noto Serif SC", monospace; }
+.ltb-sheet__actions button.is-primary, .ltb-sheet__done { background: @blueInk; color: @file; }
+
+.ltb-reveal { background: @desk; }
+.ltb-reveal__scene { margin: 0 5px; border: 6px solid @file; outline: 1px solid @rule; background: #102a36; box-shadow: 3px 4px 0 fade(#000, 34%); }
+.ltb-reveal__choice { border: 1px solid @rule; background: @file; color: @blueInk; font-family: "Courier New", "Noto Serif SC", monospace; }
+.ltb-stamp { border-width: 3px; background: fade(@file, 92%); color: #2f746c; box-shadow: 3px 4px 0 fade(#000, 26%); }
+.ltb-reveal.is-wrong .ltb-stamp { color: @redInk; }
+.ltb-stamp strong { font-family: "Kaiti SC", "STKaiti", "Noto Serif SC", serif; }
+.ltb-reveal__bar { margin-top: 8px; padding: 10px 10px 2px; border: 1px solid @rule; background: @file; }
+.ltb-reveal__bar p { color: @ink; font-family: "Courier New", "Noto Serif SC", serif; }
+.ltb-reveal__bar button, .ltb-report > button { border-color: @blueInk; background: @blueInk; box-shadow: 0 4px 0 #162a45; color: @file; font-family: "Courier New", "Noto Serif SC", monospace; }
+.ltb-report { border: 1px solid @rule; }
+.ltb-report header { padding-bottom: 9px; border-bottom: 1px solid @rule; }
+.ltb-report header span, .ltb-report span { color: @blueInk; font-family: "Courier New", monospace; }
+.ltb-report header strong { font-family: "Times New Roman", "Noto Serif SC", serif; }
+.ltb-compare > div { border-color: @rule; background: fade(#fff, 16%); }
+.ltb-report__reason, .ltb-report__summary { border-left-color: @blueInk; background: fade(@blueInk, 5%); font-family: "Courier New", "Noto Serif SC", serif; }
+.ltb-outcome-plate { border-color: @rule; }
+
+.ltb-status-person { border: 1px solid @rule; background: @fileShadow; }
+.ltb-status-person img { border: 1px solid @blueInk; }
+.ltb-status-person strong { font-family: "Times New Roman", "Noto Serif SC", serif; }
+.ltb-status-city > div { padding: 7px 8px; border: 1px solid fade(@rule, 54%); background: fade(#fff, 14%); }
+.ltb-status-city i { background: fade(@ink, 12%); }
+.ltb-status-city em { background: #2f746c; }
+.ltb-status-city > div:nth-child(2) em { background: @blueInk; }
+.ltb-status-rules { padding: 10px 5px; border-block: 1px solid fade(@rule, 48%); }
+.ltb-status-rules b { border-color: @blueInk; color: @blueInk; }
+
+.ltb-map-anchor { border-color: @rule; background: @fileShadow; }
+.ltb-map-anchor__seal { border-color: @blueInk; color: @blueInk; }
+.ltb-map-anchor__seal i { border-color: fade(@blueInk, 48%); }
+.ltb-map-anchor > strong { color: @ink; font-family: "Times New Roman", "Noto Serif SC", serif; }
+.ltb-map-currents b { color: @blueInk; }
+.ltb-map-node__card { border-color: fade(@rule, 54%); background: fade(#fff, 16%); }
+.ltb-map-node__card strong { font-family: "Times New Roman", "Noto Serif SC", serif; }
+.ltb-map-node.is-current .ltb-map-node__card { border-color: @blueInk; background: @fileShadow; box-shadow: 3px 3px 0 fade(@blueInk, 20%); }
+.ltb-map-node.is-current .ltb-map-node__pin { border-color: @blueInk; box-shadow: 0 0 0 4px fade(@blueInk, 12%); color: @blueInk; }
+.ltb-map-node.is-return::after { background: @redInk; }
+.ltb-map-node.is-return .ltb-map-node__pin { border-color: @redInk; color: @redInk; }
+
+.ltb-result { position: relative; justify-content: flex-start; margin: 10px; height: calc(100% - 20px); padding: max(42px, env(safe-area-inset-top)) 31px max(28px, env(safe-area-inset-bottom)) 48px; border: 1px solid @rule; background-color: @file; background-image: linear-gradient(90deg, transparent 27px, fade(@rule, 60%) 27px 28px, transparent 28px), repeating-linear-gradient(0deg, transparent 0 27px, fade(@blueInk, 8%) 27px 28px); color: @ink; }
+.ltb-result::before { content: ''; position: absolute; left: 8px; top: 88px; width: 10px; height: 10px; border-radius: 50%; background: @desk; box-shadow: 0 160px @desk, 0 320px @desk; }
+.ltb-result > span { color: @blueInk; }
+.ltb-result h2 { color: @ink; font-family: "Courier New", monospace; }
+.ltb-result h2 small { color: fade(@blueInk, 42%); }
+.ltb-result > strong { font-family: "Times New Roman", "Noto Serif SC", serif; }
+.ltb-result > p { color: fade(@ink, 72%); font-family: "Courier New", "Noto Serif SC", serif; }
+.ltb-result__scores span { border-color: @rule; color: @blueInk; }
+.ltb-result__scores b { color: @ink; }
+
+.ltb-pause { background: fade(@desk, 91%); }
+.ltb-pause__panel { border: 1px solid @rule; }
+.ltb-pause__panel h2 { font-family: "Times New Roman", "Noto Serif SC", serif; }
+.ltb-pause__panel > button:not(.ltb-primary) { border-color: @rule; color: @blueInk; font-family: "Courier New", "Noto Serif SC", monospace; }
+
 @media (max-height: 680px) {
   .ltb-start__hero { flex-basis: min(52dvh, 360px); }
   .ltb-start__panel { padding: 17px 20px max(16px, env(safe-area-inset-bottom)); }
@@ -265,8 +393,10 @@ button { font: inherit; -webkit-tap-highlight-color: transparent; user-select: n
   .ltb-hud { flex-basis: 44px; }
   .ltb-play { padding-top: max(4px, env(safe-area-inset-top)); padding-bottom: max(6px, env(safe-area-inset-bottom)); }
   .ltb-stage { min-height: 200px; }
-  .ltb-dialogue { min-height: 50px; max-height: 58px; margin-top: 5px; padding-block: 6px; font-size: 14px; line-height: 1.45; }
-  .ltb-actions { padding-top: 4px; }
+  .ltb-dialogue { min-height: 67px; max-height: 75px; margin-top: 5px; padding: 22px 9px 6px 27px; font-size: 13px; line-height: 1.4; }
+  .ltb-dialogue::before { left: 26px; top: 6px; }
+  .ltb-actions { padding-top: 16px; }
+  .ltb-actions::before { top: 3px; }
   .ltb-actions > p { margin-bottom: 4px; font-size: 10px; }
   .ltb-choice { min-height: 52px; font-size: 18px; }
   .ltb-reveal { padding-top: max(5px, env(safe-area-inset-top)); padding-bottom: max(7px, env(safe-area-inset-bottom)); }

@@ -184,7 +184,7 @@ export default function LostTimeBureau() {
             <button className="ltb-icon-button" type="button" onClick={game.pause} aria-label={t('pause')}><LineIcon name="pause" /></button>
           </header>
 
-          <div className="ltb-stage">
+          <div className="ltb-stage" data-file={`PSB-${String(game.caseIndex + 1).padStart(2, '0')}`}>
             <PortraitImage key={game.currentCase.id} file={game.currentCase.portrait} name={local(game.currentCase.name)} />
             <div className="ltb-stage__name"><strong>{local(game.currentCase.name)}</strong></div>
             {game.currentCase.evidence.map((item, index) => (
@@ -202,9 +202,9 @@ export default function LostTimeBureau() {
             ))}
           </div>
 
-          <blockquote className="ltb-dialogue">{local(game.currentCase.quote)}</blockquote>
+          <blockquote className="ltb-dialogue" data-label={t('statement')}>{local(game.currentCase.quote)}</blockquote>
 
-          <div className="ltb-actions">
+          <div className="ltb-actions" data-label={t('decisionForm')}>
             <p>{t('clueProgress').replace('{n}', String(game.inspected.size))}</p>
             <div>
               <button className="ltb-choice ltb-choice--stay" type="button" onPointerDown={() => submitVerdict('stay')}>{t('staySimple')}</button>
