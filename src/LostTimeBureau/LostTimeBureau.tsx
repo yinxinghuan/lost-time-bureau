@@ -72,12 +72,23 @@ function OutcomePlate({ caseId }: { caseId: string }) {
   return <img className="ltb-outcome-plate" src={`${import.meta.env.BASE_URL}manual/${caseId}-echo.jpg`} alt="" draggable={false} onError={() => setFailed(true)} />
 }
 
+function MiniPortrait({ file, name }: { file: string; name: string }) {
+  const [failed, setFailed] = useState(false)
+  return (
+    <span className={`ltb-mini-portrait${failed ? ' is-fallback' : ''}`} aria-hidden="true">
+      <i>{name.slice(0, 1)}</i>
+      {!failed && <img src={`${import.meta.env.BASE_URL}portraits/${file}`} alt="" draggable={false} onError={() => setFailed(true)} />}
+    </span>
+  )
+}
+
 export default function LostTimeBureau() {
   const [locale, setLocale] = useState<Locale>(() => detectLocale())
   const [muted, setMuted] = useState(() => sounds.isMuted())
   const [clueExpanded, setClueExpanded] = useState(false)
   const [revealStep, setRevealStep] = useState<0 | 1 | 2>(0)
   const [showStatus, setShowStatus] = useState(false)
+  const [showWorldMap, setShowWorldMap] = useState(false)
   const playedOutcomeRef = useRef('')
   const t = useMemo(() => makeTranslator(locale), [locale])
   const game = useLostTimeBureau()
@@ -105,13 +116,15 @@ export default function LostTimeBureau() {
 
   useEffect(() => setClueExpanded(false), [game.selected?.id])
 
-  const beginShift = () => { setShowStatus(false); sounds.start(); game.start() }
+  const beginShift = () => { setShowStatus(false); setShowWorldMap(false); sounds.start(); game.start() }
   const openEvidence = (id: EvidenceId) => { setClueExpanded(false); sounds.instrument(); game.openEvidence(id) }
   const closeEvidence = () => { sounds.drawerClose(); game.closeEvidence() }
   const submitVerdict = (choice: 'stay' | 'return') => { sounds.verdict(choice); game.submitVerdict(choice) }
   const nextVisitor = () => { sounds.archive(); game.archive() }
   const openStatus = () => { game.pause(); setShowStatus(true) }
   const closeStatus = () => { setShowStatus(false); game.resume() }
+  const openWorldMap = () => { game.pause(); setShowWorldMap(true) }
+  const closeWorldMap = () => { setShowWorldMap(false); game.resume() }
 
   const toggleMuted = () => {
     const next = !muted
@@ -162,10 +175,12 @@ export default function LostTimeBureau() {
         <section className="ltb-play">
           <header className="ltb-hud">
             <button className="ltb-hud__status" type="button" onClick={openStatus} aria-label={t('openStatus')}>
-              <strong>{String(game.caseIndex + 1).padStart(2, '0')} <span>/ {String(game.totalCases).padStart(2, '0')}</span></strong>
+              <MiniPortrait file={game.currentCase.portrait} name={local(game.currentCase.name)} />
+              <span className="ltb-hud__case"><strong>{String(game.caseIndex + 1).padStart(2, '0')} <i>/ {String(game.totalCases).padStart(2, '0')}</i></strong><small>{t('currentVisitor')}</small></span>
               <div className={`ltb-time${game.seconds <= 5 ? ' is-low' : ''}`}><LineIcon name="clock" /><b>{game.seconds}</b></div>
-              <small>{t('tapStatus')}</small>
+              <LineIcon name="chevron" />
             </button>
+            <button className="ltb-hud__map" type="button" onClick={openWorldMap} aria-label={t('openMap')}><LineIcon name="map" /><small>{t('mapShort')}</small></button>
             <button className="ltb-icon-button" type="button" onClick={game.pause} aria-label={t('pause')}><LineIcon name="pause" /></button>
           </header>
 
@@ -284,6 +299,46 @@ export default function LostTimeBureau() {
         </div>
       )}
 
+      {game.phase === 'case' && showWorldMap && (
+        <div className="ltb-sheet-wrap ltb-sheet-wrap--map" role="presentation" onClick={closeWorldMap}>
+          <article className="ltb-map-sheet" role="dialog" aria-modal="true" aria-labelledby="map-title" onClick={(event) => event.stopPropagation()}>
+            <div className="ltb-sheet__top">
+              <span>{t('map.eyebrow')} {game.history.length} / {game.totalCases}</span>
+              <button type="button" onClick={closeWorldMap} aria-label={t('close')}><LineIcon name="close" /></button>
+            </div>
+            <h2 id="map-title">{t('map.title')}</h2>
+            <p className="ltb-map-sheet__intro">{t('map.subtitle')}</p>
+            <div className="ltb-map-anchor">
+              <div className="ltb-map-anchor__seal"><LineIcon name="map" /><i /><i /></div>
+              <strong>{t('map.cityNow')}</strong>
+              <div className="ltb-map-currents">
+                <span><small>{t('map.historyFlow')}</small><b>{statusWord(game.stability)}</b><i><em style={{ width: `${game.stability}%` }} /></i></span>
+                <span><small>{t('map.peopleFlow')}</small><b>{statusWord(game.humanity)}</b><i><em style={{ width: `${game.humanity}%` }} /></i></span>
+              </div>
+            </div>
+            <div className="ltb-map-route">
+              {caseFiles.map((file, index) => {
+                const archived = game.history.find((entry) => entry.caseId === file.id)
+                const state = archived ? archived.verdict : index === game.caseIndex ? 'current' : 'waiting'
+                const stateLabel = archived
+                  ? archived.verdict === 'stay' ? t('map.stayed') : t('map.returned')
+                  : index === game.caseIndex ? t('map.current') : t('map.waiting')
+                return (
+                  <div className={`ltb-map-node is-${state}`} key={file.id}>
+                    <div className="ltb-map-node__card">
+                      <MiniPortrait file={file.portrait} name={local(file.name)} />
+                      <span><strong>{local(file.name)}</strong><small>{stateLabel}</small></span>
+                    </div>
+                    <i className="ltb-map-node__pin"><b>{index + 1}</b></i>
+                  </div>
+                )
+              })}
+            </div>
+            <button className="ltb-sheet__done" type="button" onClick={closeWorldMap}>{t('map.back')}</button>
+          </article>
+        </div>
+      )}
+
       {game.phase === 'result' && (
         <section className="ltb-result">
           <span>{t('daybreak')}</span>
@@ -295,7 +350,7 @@ export default function LostTimeBureau() {
         </section>
       )}
 
-      {game.phase === 'case' && game.paused && !showStatus && (
+      {game.phase === 'case' && game.paused && !showStatus && !showWorldMap && (
         <div className="ltb-pause" role="dialog" aria-modal="true" aria-label={t('pause')}>
           <div className="ltb-pause__panel">
             <h2>{t('paused')}</h2>

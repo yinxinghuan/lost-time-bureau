@@ -35,12 +35,13 @@ lost-time-bureau/
 ## 3. 核心模块
 
 - `useLostTimeBureau()` 管理 `start → case → reveal → result`。线索和暂停会补偿倒计时，页面进入后台自动暂停。
-- 判断页只消费人物姓名、对白和 3 个证据入口；职业、时间术语、内部资源与后果不常驻显示。
+- 判断页只消费人物姓名、对白和 3 个证据入口；职业、时间术语、内部资源与后果不常驻显示。顶部人物状态入口复用当前肖像缩略图，并把进度、倒计时与进入箭头合并成一个 44 px 高触控区。
 - `PortraitImage` 以案件 ID 重新挂载；当前与下一张人物图预载。新图在 `load/error` 或 1.2 秒保险任一路解除遮罩，失败时显示姓名首字剪影。每案开始时也并行预载该人物的 3 张说明书插画，但不阻塞人物和按钮。
 - 线索抽屉一次渲染一项证据，并把原有技术标签映射为“随身物品 / 他说的过去 / 会发生什么”。`ClueVisual` 优先展示 `public/manual/<case>-<evidence>.jpg`，加载前或失败时保留日期环、记忆轨迹和去留分叉线稿；DOM 叠加真实读数，本地 `clueExpanded` 决定是否继续挂载文字细节。
 - `resolveProtocol()` 计算判断对错与决定性理由；`resolveVerdict()` 计算叙事后果和内部两项城市状态。第 4 案读取第 2 案的 `future_map` 改变答案与后果。
 - 揭晓使用本地 `revealStep` 分三层：人物上的对错印章；“你的选择 / 线索指向”对照；说明书后果图与“原来 / 后来”双节点时间线。每层都由玩家主动推进，后果图读取对应案件的 `echo` 插画并在失败时无缝省略。
 - 顶部进度与倒计时合并为可点击状态入口。打开时复用暂停逻辑冻结计时，关闭后恢复；状态页显示当前人物缩略图、自然语言城市状态与三步规则。
+- 独立“时空图”入口同样复用暂停/恢复逻辑。地图直接读取 `history`、`caseIndex`、`stability` 与 `humanity`：7 个节点分别推导为已留下、已送回、当前或尚未抵达，路线颜色与城市双流向会随每次裁定即时更新。
 - 单案分数为基础 100、全线索 +25、剩余至少 8 秒 +20、判断正确 +35；最终分加内部两项城市状态较低值的 10 倍。
 - 最佳分保存在 `lost-time-bureau-best`；语言使用 `game_locale`，静音使用游戏专属键。
 
@@ -52,6 +53,7 @@ lost-time-bureau/
 - **调整计时、得分和内部城市状态**：编辑 `hooks/useLostTimeBureau.ts`。
 - **移动线索热点**：修改 `LostTimeBureau.tsx` 的 `cluePositions`。
 - **改主界面、抽屉或三层揭晓**：编辑 `LostTimeBureau.tsx` 与 `LostTimeBureau.less`。
+- **改顶部人物入口或时空图**：在 `LostTimeBureau.tsx` 调整 `MiniPortrait`、HUD 与地图节点结构，在 `LostTimeBureau.less` 调整 `ltb-hud-*`、`ltb-map-*`；地图状态来自现有 `history`，无需新增存储。
 - **改自然语言 UI**：编辑 `i18n/index.ts`；案件对白与后果仍在 `data/cases.ts`。
 - **改音效与震动**：编辑 `utils/sounds.ts`。
 - **接排行榜或云存档**：以 `totalScore` 和 `history` 为载荷，使用项目永久 UUID 作为 `session_id`；当前版本仅保存本地最佳分。
