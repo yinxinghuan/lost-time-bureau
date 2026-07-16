@@ -159,12 +159,23 @@ export default function LostTimeBureau() {
           <div className="ltb-start__hero">
             <img src={`${import.meta.env.BASE_URL}poster.png`} alt={t('start.posterAlt')} draggable={false} />
             <div className="ltb-start__shade" />
+            <div className="ltb-start__case">07</div>
+            <div className="ltb-start__system">{t('bureau')}</div>
+            <div className="ltb-start__hero-copy">
+              <small>{t('subtitle')}</small>
+              <strong>{t('start.eyebrow')}</strong>
+            </div>
             <button className="ltb-lang" type="button" onClick={switchLocale} aria-label={t('language')}>{locale === 'zh' ? 'EN' : '中'}</button>
           </div>
           <div className="ltb-start__panel">
             <span>{t('start.eyebrow')}</span>
             <h1>{t('title')}</h1>
             <p>{t('start.simpleCopy')}</p>
+            <div className="ltb-start__steps" aria-hidden="true">
+              <span><b>01</b>{t('status.rule1')}</span>
+              <span><b>02</b>{t('status.rule2')}</span>
+              <span><b>03</b>{t('status.rule3')}</span>
+            </div>
             <button className="ltb-primary" type="button" onPointerDown={beginShift}>{t('start.simpleButton')}</button>
             {game.bestScore > 0 && <small>{t('best')} {game.bestScore}</small>}
           </div>
@@ -186,7 +197,10 @@ export default function LostTimeBureau() {
 
           <div className="ltb-stage" data-file={`PSB-${String(game.caseIndex + 1).padStart(2, '0')}`}>
             <PortraitImage key={game.currentCase.id} file={game.currentCase.portrait} name={local(game.currentCase.name)} />
-            <div className="ltb-stage__name"><strong>{local(game.currentCase.name)}</strong></div>
+            <div className="ltb-stage__name">
+              <strong>{local(game.currentCase.name)}</strong>
+              <small>{local(game.currentCase.meta)}</small>
+            </div>
             {game.currentCase.evidence.map((item, index) => (
               <button
                 className={`ltb-clue${game.inspected.has(item.id) ? ' is-seen' : ''}`}
